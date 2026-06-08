@@ -49,9 +49,71 @@ HTML_TEMPLATE = """
             <tr><th>Future Corrosion Allowance / 부식 여유 (mm)</th><td>{{ fca }}</td></tr>
             <tr><th>Weld Joint Efficiency / 용접 효율 (E)</th><td>{{ weld_eff }}</td></tr>
             <tr><th>Weld Seam Temp Adj. / 용접부 온도 보정</th><td>{{ "Yes (+4&deg;C)" if weld_adj else "No" }}</td></tr>
+            <tr><th>Thermal Cycles / 열 반복 횟수</th><td>{{ thermal_cycles }}</td></tr>
+            {% if "Level 3" in level %}
+            <tr><th>Lifetime Cycles Multiplier / 수명 반복 배수</th><td>{{ multiplier }}</td></tr>
+            {% endif %}
         </table>
     </div>
 
+    {% if "Level 3" in level %}
+    <div class="section">
+        <div class="section-title">2. Time-Temperature-Stress Profile (Level 3 입력 데이터)</div>
+        <table class="data-table period-table">
+            <thead>
+                <tr>
+                    <th>Point Index</th>
+                    <th>Time (hrs)</th>
+                    <th>Temperature (&deg;C)</th>
+                    <th>Stress (MPa)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pt in level3_profile %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ "%.1f"|format(pt.Time) }}</td>
+                    <td>{{ "%.1f"|format(pt.Temperature) }}</td>
+                    <td>{{ "%.1f"|format(pt.Stress) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if cycle_table %}
+    <div class="section">
+        <div class="section-title">2b. Rainflow Cycle Counting Results (레인플로우 피로 분석)</div>
+        <table class="data-table period-table">
+            <thead>
+                <tr>
+                    <th>Cycle Index</th>
+                    <th>Stress Range (MPa)</th>
+                    <th>Mean Stress (MPa)</th>
+                    <th>Count</th>
+                    <th>Amplitude S<sub>a</sub> (MPa)</th>
+                    <th>Allowable Cycles N</th>
+                    <th>Fatigue Damage (dD<sub>f</sub>)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in cycle_table %}
+                <tr>
+                    <td>{{ c.index }}</td>
+                    <td>{{ "%.1f"|format(c.range) }}</td>
+                    <td>{{ "%.1f"|format(c.mean) }}</td>
+                    <td>{{ "%.1f"|format(c.count) }}</td>
+                    <td>{{ "%.1f"|format(c.Sa) }}</td>
+                    <td>{{ "%.1f"|format(c.N_allow) if c.N_allow != float('inf') else "Infinite" }}</td>
+                    <td>{{ "%.6f"|format(c.damage) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    {% else %}
     <div class="section">
         <div class="section-title">2. Operating Conditions / 운전 기간 (Periods)</div>
         <table class="data-table period-table">
@@ -63,6 +125,9 @@ HTML_TEMPLATE = """
                     <th>Unit (단위)</th>
                     <th>Temperature (온도, &deg;C)</th>
                     <th>Duration (기간, hrs)</th>
+                    {% if "Level 2" in level %}
+                    <th>Von Mises Stress (MPa)</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -74,17 +139,22 @@ HTML_TEMPLATE = """
                     <td>{{ p.get('Pressure Unit', 'MPa') }}</td>
                     <td>{{ p.get('Temperature (C)', 0) }}</td>
                     <td>{{ p.get('Duration (hrs)', 0) }}</td>
+                    {% if "Level 2" in level %}
+                    <td>{{ "%.1f"|format(p.get('Von Mises Stress (MPa)')) if p.get('Von Mises Stress (MPa)') is not none and p.get('Von Mises Stress (MPa)') >= 0 else "-" }}</td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% endif %}
 
     <div class="section">
         <div class="section-title">3. Detailed Calculation Steps (상세 계산 과정)</div>
         <p>The following equations demonstrate the step-by-step calculation. (수식은 알아보기 쉽게 텍스트로 표현됩니다.)</p>
         <div class="math-trace">{% for line in math_trace %}
-{{ line }}{% endfor %}</div>
+{{ line }}
+{% endfor %}</div>
         <div style="text-align: center; margin-top: 20px;">
             <img src="data:image/png;base64,{{ graph_b64 }}" alt="Assessment Graph" style="max-width: 100%; border: 1px solid #ddd; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
             {% if creep_life_graph_b64 %}
@@ -97,7 +167,13 @@ HTML_TEMPLATE = """
     <div class="section">
         <div class="section-title">4. Final Assessment Result (최종 평가 결과)</div>
         <div class="result-box">
+            {% if "Level 3" in level %}
+            Cumulative Creep Damage / 누적 크리프 손상 (D<sub>c</sub>): {{ "%.6f"|format(Dc) }}<br>
+            Cumulative Fatigue Damage / 누적 피로 손상 (D<sub>f</sub>): {{ "%.6f"|format(Df) }}<br>
+            Total Interaction Damage Ratio / 총 상호작용 손상비: {{ "%.6f"|format(total_damage) }}<br>
+            {% else %}
             Total Creep Damage Fraction / 총 크리프 손상 지수 (D<sub>c</sub>): {{ "%.6f"|format(total_damage) }}<br>
+            {% endif %}
             Estimated Remaining Life / 예상 잔여 수명: {% if remaining_life == float('inf') %}Infinite (무한){% else %}{{ "%.1f"|format(remaining_life) }}{% endif %} hrs<br><br>
             Assessment Status / 평가 결과: <span class="{% if 'Acceptable' in status %}status-pass{% else %}status-fail{% endif %}">{{ status }}</span>
         </div>
@@ -124,6 +200,7 @@ def generate_html_report(component_data, result_data):
     weld_eff = component_data.get('Weld Joint Efficiency (E)', 1.0)
     weld_adj = component_data.get('Weld Seam Temp Adjustment', False)
     periods = component_data.get('Periods', [])
+    thermal_cycles = component_data.get('Thermal Cycles', 0)
     
     html_content = template.render(
         date=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -137,6 +214,12 @@ def generate_html_report(component_data, result_data):
         weld_eff=weld_eff,
         weld_adj=weld_adj,
         periods=periods,
+        thermal_cycles=thermal_cycles,
+        multiplier=result_data.get('multiplier', 1.0),
+        level3_profile=result_data.get('level3_profile', []),
+        cycle_table=result_data.get('cycle_table', []),
+        Dc=result_data.get('Dc', 0.0),
+        Df=result_data.get('Df', 0.0),
         math_trace=result_data.get('trace', []),
         total_damage=result_data.get('total_damage', 0),
         remaining_life=result_data.get('remaining_life', float('inf')),

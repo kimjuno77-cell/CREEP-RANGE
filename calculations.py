@@ -110,6 +110,177 @@ def map_material(material_name):
     else:
         return "Carbon Steel"
 
+
+# --- Fatigue Curve Parameters & Langer's Equation Constants ---
+FATIGUE_CURVE_PARAMS = {
+    "Carbon Steel": {
+        "A": 26100.0,
+        "B": 116.0,
+        "E": 207000.0
+    },
+    "1.25Cr-0.5Mo": {
+        "A": 28000.0,
+        "B": 125.0,
+        "E": 200000.0
+    },
+    "2.25Cr-1Mo": {
+        "A": 29000.0,
+        "B": 130.0,
+        "E": 200000.0
+    },
+    "9Cr-1Mo": {
+        "A": 30000.0,
+        "B": 140.0,
+        "E": 200000.0
+    },
+    "304 SS": {
+        "A": 58000.0,
+        "B": 190.0,
+        "E": 195000.0
+    },
+    "316 SS": {
+        "A": 58000.0,
+        "B": 190.0,
+        "E": 195000.0
+    },
+    "321 SS": {
+        "A": 58000.0,
+        "B": 190.0,
+        "E": 195000.0
+    },
+    "347 SS": {
+        "A": 58000.0,
+        "B": 190.0,
+        "E": 195000.0
+    }
+}
+
+def get_asme_allowable_cycles(material, S_a_mpa):
+    """
+    ASME Section VIII Div 2 Part 5 Langer's Equation:
+    Sa = A / sqrt(N) + B  ==> N = (A / (Sa - B))^2
+    """
+    props = FATIGUE_CURVE_PARAMS.get(material, FATIGUE_CURVE_PARAMS["Carbon Steel"])
+    A = props["A"]
+    B = props["B"]
+    if S_a_mpa <= B:
+        return float('inf')
+    return (A / (S_a_mpa - B))**2
+
+def rainflow(series):
+    """
+    Rainflow counting algorithm according to ASTM E1049-85.
+    Returns list of tuples: (range, mean, count)
+    """
+    extrema = []
+    n = len(series)
+    if n < 2:
+        return []
+        
+    # Find all peaks and troughs
+    extrema.append(series[0])
+    for i in range(1, n - 1):
+        d1 = series[i] - series[i-1]
+        d2 = series[i+1] - series[i]
+        if d1 * d2 < 0:
+            extrema.append(series[i])
+        elif d1 != 0 and d2 == 0:
+            extrema.append(series[i])
+            
+    if series[n-1] != extrema[-1]:
+        extrema.append(series[n-1])
+        
+    cycles = []
+    stack = []
+    
+    for val in extrema:
+        stack.append(val)
+        while len(stack) >= 3:
+            x = abs(stack[-1] - stack[-2])
+            y = abs(stack[-2] - stack[-3])
+            
+            if x >= y:
+                mean = (stack[-2] + stack[-3]) / 2.0
+                if len(stack) == 3:
+                    cycles.append((y, mean, 0.5))
+                    stack.pop(0)
+                else:
+                    cycles.append((y, mean, 1.0))
+                    stack.pop(-2)
+                    stack.pop(-2)
+            else:
+                break
+                
+    while len(stack) >= 2:
+        y = abs(stack[0] - stack[1])
+        mean = (stack[0] + stack[1]) / 2.0
+        cycles.append((y, mean, 0.5))
+        stack.pop(0)
+        
+    return cycles
+
+def parse_profile_text(text):
+    periods = []
+    if not text:
+        return periods
+    lines = text.strip().split('\n')
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        parts = []
+        if ',' in line:
+            parts = line.split(',')
+        elif '\t' in line:
+            parts = line.split('\t')
+        else:
+            parts = line.split()
+            
+        if len(parts) >= 3:
+            try:
+                time_val = float(parts[0].strip())
+                temp_val = float(parts[1].strip())
+                stress_val = float(parts[2].strip())
+                periods.append({
+                    "Time": time_val,
+                    "Temperature": temp_val,
+                    "Stress": stress_val
+                })
+            except ValueError:
+                continue
+    return periods
+
+def generate_creep_fatigue_envelope_graph(Dc, Df, material):
+    plt.figure(figsize=(7, 7))
+    
+    # Corner point Selection
+    is_ss = "304" in material or "316" in material or "321" in material or "347" in material
+    C = 0.3 if is_ss else 0.1
+    F = 0.3 if is_ss else 0.1
+    
+    # Plot envelope lines
+    plt.plot([0, C, 1], [1, F, 0], 'g-', linewidth=2.5, label="Creep-Fatigue Envelope Limit")
+    plt.fill_between([0, C, 1], [1, F, 0], 0, color='lightgreen', alpha=0.3, label="Acceptable Region")
+    
+    # Plot Operating Point
+    plt.plot(Dc, Df, 'ro', markersize=10, label=f"Operating Point (Dc={Dc:.4f}, Df={Df:.4f})")
+    plt.text(Dc, Df, f"  ({Dc:.4f}, {Df:.4f})", verticalalignment='bottom', fontweight='bold', fontsize=11)
+    
+    plt.xlim(0, 1.1)
+    plt.ylim(0, 1.1)
+    plt.xlabel("Cumulative Creep Damage (Dc)", fontsize=11)
+    plt.ylabel("Cumulative Fatigue Damage (Df)", fontsize=11)
+    plt.title(f"Creep-Fatigue Bilinear Envelope - {material}", fontsize=12, fontweight='bold')
+    plt.grid(True, ls="--", alpha=0.5)
+    plt.legend(loc="upper right", fontsize=10)
+    
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png', bbox_inches='tight')
+    plt.close()
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode('utf-8')
+
+
 class CreepAssessment:
     def __init__(self, component_data):
         self.data = component_data
@@ -127,6 +298,7 @@ class CreepAssessment:
         self.periods = self.data.get("Periods", [])
         self.assessment_level = self.data.get("Assessment Level", "API 579-1_ASME FFS-1 Level 1")
         self.component_type = self.data.get("Component Type", "Combined (동체+경판)")
+        self.thermal_cycles = float(self.data.get("Thermal Cycles", 0))
         
         self.trace = []  # Step-by-step plain-text explanations
         self.plot_points = []
@@ -135,7 +307,190 @@ class CreepAssessment:
         self.trace.append("=== Component Design Assessment (컴포넌트 설계 평가) ===")
         self.trace.append(f"Material (재질): {self.raw_material} (Mapped to {self.material})")
         self.trace.append(f"Creep Range Threshold (크리프 허용 온도): {self.mat_props['creep_temp_c']} °C")
+        self.trace.append(f"Assessment Level (평가 레벨): {self.assessment_level}")
         
+        # Check thermal cycles
+        if "Level 1" in self.assessment_level:
+            if self.thermal_cycles > 50:
+                self.trace.append(f"   [Warning] Level 1 screening prohibits thermal cycles > 50. (Current: {self.thermal_cycles:.0f} cycles)")
+                self.trace.append("   Component exceeds Level 1 limits. Proceeding to Level 2 or 3 is recommended.")
+            else:
+                self.trace.append(f"   Thermal Cycles: {self.thermal_cycles:.0f} cycles (<= 50, Acceptable for Level 1)")
+        else:
+            self.trace.append(f"   Thermal Cycles: {self.thermal_cycles:.0f} cycles (Permitted in Level 2/3)")
+
+        # Level 3 Creep-Fatigue Evaluation Branch
+        if "Level 3" in self.assessment_level:
+            self.trace.append("=== Level 3 Creep-Fatigue Assessment ===")
+            profile_text = self.data.get("Level 3 Profile Text", "")
+            multiplier = float(self.data.get("Level 3 Multiplier", 1.0))
+            self.trace.append(f"   Lifetime Cycles Multiplier: {multiplier:.0f}")
+            
+            profile_points = parse_profile_text(profile_text)
+            if len(profile_points) < 2:
+                self.trace.append("   [Error] Profile must contain at least 2 points (Time, Temp, Stress).")
+                return {
+                    "total_damage": 0.0,
+                    "Dc": 0.0,
+                    "Df": 0.0,
+                    "remaining_life": 0.0,
+                    "status": "Error: Insufficient Profile Data",
+                    "trace": self.trace,
+                    "period_results": [],
+                    "graph_b64": "",
+                    "creep_life_graph_b64": ""
+                }
+                
+            self.trace.append(f"   Successfully parsed {len(profile_points)} profile points.")
+            
+            # 1. Creep damage calculation
+            self.trace.append("")
+            self.trace.append("   1. Creep Damage Accumulation (Miner's Rule):")
+            
+            Dc_cycle = 0.0
+            total_duration_cycle = 0.0
+            
+            Sr0 = self.mat_props['Sr0']
+            Sr_slope = self.mat_props['Sr_slope']
+            n_omega = self.mat_props['n_omega']
+            Omega = self.mat_props['Omega']
+            
+            for k in range(len(profile_points) - 1):
+                pt1 = profile_points[k]
+                pt2 = profile_points[k+1]
+                
+                dt = pt2["Time"] - pt1["Time"]
+                if dt <= 0:
+                    continue
+                    
+                total_duration_cycle += dt
+                T_avg = (pt1["Temperature"] + pt2["Temperature"]) / 2.0
+                sigma_avg = (pt1["Stress"] + pt2["Stress"]) / 2.0
+                
+                if self.weld_adjustment and T_avg >= self.mat_props['creep_temp_c']:
+                    T_assess = T_avg + 4.0
+                else:
+                    T_assess = T_avg
+                    
+                if T_assess < self.mat_props['creep_temp_c']:
+                    continue
+                    
+                stress_psi = sigma_avg * 145.038
+                T_F = (T_assess * 9/5) + 32
+                T_R = T_F + 460.0
+                
+                Sr_j = max(1.0, Sr0 - Sr_slope * T_F)
+                eps_dot = 1e-8 * (stress_psi / Sr_j)**n_omega
+                
+                if eps_dot > 0:
+                    t_d = 1.0 / (eps_dot * Omega)
+                    dDc = dt / t_d
+                else:
+                    t_d = float('inf')
+                    dDc = 0.0
+                    
+                Dc_cycle += dDc
+                self.trace.append(f"      Step {k+1} ({pt1['Time']}h -> {pt2['Time']}h): dt={dt:.2f}h, T={T_assess:.1f}°C, Stress={sigma_avg:.1f} MPa, t_d={t_d:.1f}h -> dDc={dDc:.6f}")
+                
+            Dc_total = Dc_cycle * multiplier
+            self.trace.append(f"      Cycle Creep Damage (Dc_cycle): {Dc_cycle:.6f}")
+            self.trace.append(f"      Total Cumulative Creep Damage (Dc = Dc_cycle * Multiplier): {Dc_total:.6f}")
+            
+            # 2. Fatigue damage calculation using Rainflow counting
+            self.trace.append("")
+            self.trace.append("   2. Fatigue Damage Accumulation (Rainflow counting & ASME Div 2 Curves):")
+            
+            stresses = [pt["Stress"] for pt in profile_points]
+            cycles = rainflow(stresses)
+            
+            self.trace.append(f"      Rainflow counting found {len(cycles)} cycles/half-cycles.")
+            
+            Df_cycle = 0.0
+            cycle_table_trace = []
+            
+            for idx_c, (stress_range, stress_mean, count) in enumerate(cycles):
+                Sa_mpa = stress_range / 2.0
+                N_allow = get_asme_allowable_cycles(self.material, Sa_mpa)
+                dDf = count / N_allow if N_allow > 0 else 0.0
+                Df_cycle += dDf
+                
+                n_allow_str = f"{N_allow:.1f}" if N_allow != float('inf') else "Infinite"
+                self.trace.append(f"      Cycle {idx_c+1}: Range={stress_range:.1f} MPa, Mean={stress_mean:.1f} MPa, Count={count} -> Sa={Sa_mpa:.1f} MPa, N_allow={n_allow_str} -> dDf={dDf:.6f}")
+                cycle_table_trace.append({
+                    "index": idx_c + 1,
+                    "range": stress_range,
+                    "mean": stress_mean,
+                    "count": count,
+                    "Sa": Sa_mpa,
+                    "N_allow": N_allow,
+                    "damage": dDf
+                })
+                
+            Df_total = Df_cycle * multiplier
+            self.trace.append(f"      Cycle Fatigue Damage (Df_cycle): {Df_cycle:.6f}")
+            self.trace.append(f"      Total Cumulative Fatigue Damage (Df = Df_cycle * Multiplier): {Df_total:.6f}")
+            
+            # 3. Creep-Fatigue Interaction Envelope Check
+            self.trace.append("")
+            self.trace.append("   3. Creep-Fatigue Bilinear Envelope Check:")
+            
+            is_ss = "304" in self.material or "316" in self.material or "321" in self.material or "347" in self.material
+            C = 0.3 if is_ss else 0.1
+            F = 0.3 if is_ss else 0.1
+            
+            self.trace.append(f"      Bilinear Envelope Corner Point: (Dc_corner, Df_corner) = ({C}, {F})")
+            
+            is_acceptable = False
+            margin_ratio = 0.0
+            
+            if Dc_total <= C:
+                limit_Df = 1.0 - ((1.0 - F) / C) * Dc_total
+                is_acceptable = Df_total <= limit_Df
+                margin_ratio = max(0.0, Df_total / limit_Df) if limit_Df > 0 else float('inf')
+                self.trace.append(f"      Since Dc={Dc_total:.4f} <= {C}: Df Limit = 1.0 - ({1.0 - F}/{C}) * {Dc_total:.4f} = {limit_Df:.4f}")
+            else:
+                limit_Df = (F / (1.0 - C)) * (1.0 - Dc_total)
+                is_acceptable = Df_total <= limit_Df and Dc_total <= 1.0
+                if limit_Df > 0:
+                    margin_ratio = max(0.0, Df_total / limit_Df)
+                else:
+                    margin_ratio = float('inf') if Df_total > 0 else 1.0
+                self.trace.append(f"      Since Dc={Dc_total:.4f} > {C}: Df Limit = ({F}/{1.0 - C}) * (1.0 - {Dc_total:.4f}) = {limit_Df:.4f}")
+                
+            status = "Acceptable (허용됨)" if is_acceptable else "Unacceptable (불가)"
+            self.trace.append(f"      Operating Point (Dc, Df) = ({Dc_total:.4f}, {Df_total:.4f}) is {status}.")
+            
+            total_lifetime_duration = total_duration_cycle * multiplier
+            rem_life = 0.0
+            if is_acceptable:
+                if margin_ratio > 0 and margin_ratio < 1.0:
+                    rem_life = total_lifetime_duration * (1.0 - margin_ratio) / margin_ratio
+                elif margin_ratio == 0:
+                    rem_life = float('inf')
+            else:
+                rem_life = 0.0
+                    
+            rem_life_str = "Infinite (무한)" if rem_life == float('inf') else f"{rem_life:.1f} hrs"
+            self.trace.append(f"   Estimated Remaining Life (예상 잔여 수명): {rem_life_str}")
+            
+            graph_b64 = generate_creep_fatigue_envelope_graph(Dc_total, Df_total, self.material)
+            
+            return {
+                "total_damage": Dc_total + Df_total,
+                "Dc": Dc_total,
+                "Df": Df_total,
+                "remaining_life": rem_life,
+                "status": status,
+                "trace": self.trace,
+                "period_results": [],
+                "graph_b64": graph_b64,
+                "creep_life_graph_b64": "",
+                "cycle_table": cycle_table_trace,
+                "level3_profile": profile_points,
+                "multiplier": multiplier
+            }
+
+        # --- Standard Level 1 / Level 2 Code Paths ---
         R_c = (self.Di_mm / 2.0) + self.FCA_mm
         tc_s = max(0.001, self.t_s_mm - self.FCA_mm)
         tc_h = max(0.001, self.t_h_mm - self.FCA_mm)
@@ -159,9 +514,20 @@ class CreepAssessment:
             temp_c = float(p.get("Temperature (C)", 0))
             duration = float(p.get("Duration (hrs)", 0))
             
+            # Optional Von Mises / Equivalent Stress input for Level 2
+            von_mises = p.get("Von Mises Stress (MPa)")
+            vm_stress = None
+            if von_mises is not None and str(von_mises).strip() != "" and str(von_mises).lower() != "nan":
+                try:
+                    vm_stress = float(von_mises)
+                except ValueError:
+                    pass
+            
             self.trace.append("")
             self.trace.append(f"--- Assessment for Operating Period (운전 기간 평가) j = {j} ---")
             self.trace.append(f"   Input Conditions (입력 조건): Type = {p_type}, Pressure = {pressure} {p_unit}, Temp = {temp_c} °C, Duration = {duration} hrs")
+            if vm_stress is not None:
+                self.trace.append(f"   Von Mises Equivalent Stress (다축 유효 응력 입력): {vm_stress:.4f} MPa")
             
             # Unit conversion to MPa
             if p_unit.lower() == "kg/mm^2" or p_unit.lower() == "kg/mm2":
@@ -171,7 +537,6 @@ class CreepAssessment:
                 p_mpa = pressure
                 p_text = f"{p_mpa:.4f} MPa"
                 
-            # Temperature adjustment
             T_assess = temp_c
             if self.weld_adjustment and temp_c >= self.mat_props['creep_temp_c']:
                 T_assess += 4.0
@@ -188,49 +553,50 @@ class CreepAssessment:
                 })
                 continue
                 
-            self.trace.append("   2. Membrane Stress Calculation (막응력 계산):")
-            
-            stress_cm = 0.0
-            stress_Lm = 0.0
-            stress_mH = 0.0
-            stresses = []
-            
-            is_combined = "Combined" in self.component_type
-            is_shell = "Shell" in self.component_type or is_combined
-            is_pipe = "Pipe" in self.component_type
-            is_head = "Head" in self.component_type or is_combined
-            
-            if is_shell or is_pipe:
-                comp_str = "Pipe" if is_pipe else "Shell"
-                comp_str_ko = "배관" if is_pipe else "동체"
-                
-                # Shell circumferential
-                stress_cm = (p_mpa / self.E) * ((R_c / tc_s) + 0.6)
-                self.trace.append(f"      {comp_str} Circumferential ({comp_str_ko} 원주방향 막응력, sigma_cm) = (P / E) * (R / tc_s + 0.6)")
-                self.trace.append(f"      sigma_cm = ({p_mpa:.4f} / {self.E}) * ({R_c:.2f} / {tc_s:.2f} + 0.6) = {stress_cm:.4f} MPa")
-                
-                # Shell longitudinal
-                stress_Lm = (p_mpa / (2 * self.E)) * ((R_c / tc_s) - 0.4)
-                self.trace.append(f"      {comp_str} Longitudinal ({comp_str_ko} 길이방향 막응력, sigma_Lm) = (P / 2E) * (R / tc_s - 0.4)")
-                self.trace.append(f"      sigma_Lm = ({p_mpa:.4f} / {2*self.E}) * ({R_c:.2f} / {tc_s:.2f} - 0.4) = {stress_Lm:.4f} MPa")
-                
-                stresses.extend([stress_cm, stress_Lm])
-            
-            if is_head:
-                # Head stress (K=1 for 2:1 elliptical)
-                stress_mH = (p_mpa / (2 * self.E)) * ((Di_c * 1.0 / tc_h) + 0.2)
-                self.trace.append(f"      Elliptical Head (경판 막응력, sigma_mH) = (P / 2E) * ((Di_c * K) / tc_h + 0.2)")
-                self.trace.append(f"      sigma_mH = ({p_mpa:.4f} / {2*self.E}) * (({Di_c:.2f} * 1.0) / {tc_h:.2f} + 0.2) = {stress_mH:.4f} MPa")
-                stresses.append(stress_mH)
-                
-            max_stress_mpa = max(stresses) if stresses else 0.0
-            
-            if is_combined:
-                self.trace.append(f"      Maximum Membrane Stress (최대 막응력, sigma_max) = max({stress_cm:.4f}, {stress_Lm:.4f}, {stress_mH:.4f}) = {max_stress_mpa:.4f} MPa")
-            elif is_shell or is_pipe:
-                self.trace.append(f"      Maximum Membrane Stress (최대 막응력, sigma_max) = max({stress_cm:.4f}, {stress_Lm:.4f}) = {max_stress_mpa:.4f} MPa")
+            # Stress determination
+            if vm_stress is not None and vm_stress > 0:
+                max_stress_mpa = vm_stress
+                self.trace.append(f"   [Level 2/FEA] Using user-defined Von Mises Equivalent Stress (다축 유효 응력): {max_stress_mpa:.4f} MPa")
             else:
-                self.trace.append(f"      Maximum Membrane Stress (최대 막응력, sigma_max) = {stress_mH:.4f} MPa")
+                self.trace.append("   2. Membrane Stress Calculation (막응력 계산):")
+                stress_cm = 0.0
+                stress_Lm = 0.0
+                stress_mH = 0.0
+                stresses = []
+                
+                is_combined = "Combined" in self.component_type
+                is_shell = "Shell" in self.component_type or is_combined
+                is_pipe = "Pipe" in self.component_type
+                is_head = "Head" in self.component_type or is_combined
+                
+                if is_shell or is_pipe:
+                    comp_str = "Pipe" if is_pipe else "Shell"
+                    comp_str_ko = "배관" if is_pipe else "동체"
+                    
+                    stress_cm = (p_mpa / self.E) * ((R_c / tc_s) + 0.6)
+                    self.trace.append(f"      {comp_str} Circumferential ({comp_str_ko} 원주방향 막응력, sigma_cm) = (P / E) * (R / tc_s + 0.6)")
+                    self.trace.append(f"      sigma_cm = ({p_mpa:.4f} / {self.E}) * ({R_c:.2f} / {tc_s:.2f} + 0.6) = {stress_cm:.4f} MPa")
+                    
+                    stress_Lm = (p_mpa / (2 * self.E)) * ((R_c / tc_s) - 0.4)
+                    self.trace.append(f"      {comp_str} Longitudinal ({comp_str_ko} 길이방향 막응력, sigma_Lm) = (P / 2E) * (R / tc_s - 0.4)")
+                    self.trace.append(f"      sigma_Lm = ({p_mpa:.4f} / {2*self.E}) * ({R_c:.2f} / {tc_s:.2f} - 0.4) = {stress_Lm:.4f} MPa")
+                    
+                    stresses.extend([stress_cm, stress_Lm])
+                
+                if is_head:
+                    stress_mH = (p_mpa / (2 * self.E)) * ((Di_c * 1.0 / tc_h) + 0.2)
+                    self.trace.append(f"      Elliptical Head (경판 막응력, sigma_mH) = (P / 2E) * ((Di_c * K) / tc_h + 0.2)")
+                    self.trace.append(f"      sigma_mH = ({p_mpa:.4f} / {2*self.E}) * (({Di_c:.2f} * 1.0) / {tc_h:.2f} + 0.2) = {stress_mH:.4f} MPa")
+                    stresses.append(stress_mH)
+                    
+                max_stress_mpa = max(stresses) if stresses else 0.0
+                
+                if is_combined:
+                    self.trace.append(f"      Maximum Membrane Stress (최대 막응력, sigma_max) = max({stress_cm:.4f}, {stress_Lm:.4f}, {stress_mH:.4f}) = {max_stress_mpa:.4f} MPa")
+                elif is_shell or is_pipe:
+                    self.trace.append(f"      Maximum Membrane Stress (최대 막응력, sigma_max) = max({stress_cm:.4f}, {stress_Lm:.4f}) = {max_stress_mpa:.4f} MPa")
+                else:
+                    self.trace.append(f"      Maximum Membrane Stress (최대 막응력, sigma_max) = {stress_mH:.4f} MPa")
             
             stress_psi = max_stress_mpa * 145.038
             self.trace.append(f"      Converted Stress for Properties Lookup (물성치 조회를 위한 응력 변환): {stress_psi:.1f} psi")
@@ -248,8 +614,6 @@ class CreepAssessment:
                 A0 = self.mat_props['A0']
                 A1 = self.mat_props['A1']
                 C_lmp = self.mat_props['C_lmp']
-                
-                # If B31.3, apply a safety margin (e.g. subtract 500 from LMP)
                 margin = 500.0 if self.assessment_level == "ASME B31.3 Appendix V" else 0.0
                 
                 if stress_psi > 0:
@@ -296,15 +660,20 @@ class CreepAssessment:
             total_damage += damage_j
             period_results.append({
                 "j": j, "P_MPa": p_mpa, "T_assess": T_assess, "Duration": duration,
-                "Stress_MPa": max_stress_mpa, "t_d": t_d, "Damage": damage_j
+                "Stress_MPa": max_stress_mpa, "t_d": t_d, "Damage": damage_j,
+                "Von_Mises_Stress": vm_stress
             })
             
         self.trace.append("")
         self.trace.append("=== Final Assessment Result (최종 평가 결과) ===")
         self.trace.append(f"Total Creep Damage Fraction (총 크리프 손상 지수, D_c) = Sum(D_c,j) = {total_damage:.6f}")
         
-        status = "Acceptable (허용됨)" if total_damage <= 1.0 else "Unacceptable (불가)"
-        self.trace.append(f"Since D_c is {total_damage:.6f} {'<=' if total_damage <= 1.0 else '>'} 1.0, the component is {status}.")
+        # D_callow threshold logic
+        D_callow = 0.8 if "Level 1" in self.assessment_level else 1.0
+        self.trace.append(f"Allowable Creep Damage Limit (D_callow): {D_callow}")
+        
+        status = "Acceptable (허용됨)" if total_damage <= D_callow else "Unacceptable (불가)"
+        self.trace.append(f"Since D_c is {total_damage:.6f} {'<=' if total_damage <= D_callow else '>'} {D_callow}, the component is {status}.")
         
         rem_life = 0
         if total_damage < 1.0 and len(period_results) > 0:

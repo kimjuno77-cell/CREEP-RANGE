@@ -123,78 +123,123 @@ with tab1:
             active_comp["Weld Joint Efficiency (E)"] = c8.number_input("Weld Joint Eff. / 용접 효율 (E)", value=float(active_comp.get("Weld Joint Efficiency (E)", 1.0)))
             active_comp["Weld Seam Temp Adjustment"] = c9.checkbox("Weld Seam Temp Adj. / 용접부 온도 보정 (+4°C)", value=bool(active_comp.get("Weld Seam Temp Adjustment", True)))
             
-        with st.expander("🕒 Operating Periods (운전 기간)", expanded=True):
-            st.write("Define the operating conditions over the component's life.")
-            periods_df = pd.DataFrame(active_comp.get("Periods", []))
+            c10, c11 = st.columns([1, 2])
+            active_comp["Thermal Cycles"] = c10.number_input("Thermal Cycles / 열 반복 횟수", value=float(active_comp.get("Thermal Cycles", 0.0)), min_value=0.0, step=1.0, help="For Level 1: checks if <= 50. For Level 2/3: tracks operational cycles.")
             
-            if periods_df.empty:
-                periods_df = pd.DataFrame(columns=["Period Type", "Pressure", "Pressure Unit", "Temperature (C)", "Duration (hrs)"])
+        is_level3 = "Level 3" in active_comp["Assessment Level"]
+        
+        if is_level3:
+            with st.expander("📈 Time-Temperature-Stress Profile (Level 3)", expanded=True):
+                st.write("Enter the startup, dwell, and shutdown history of the component.")
                 
-            edited_periods = st.data_editor(
-                periods_df,
-                num_rows="dynamic",
-                width="stretch",
-                column_order=("Period Type", "Pressure", "Pressure Unit", "Temperature (C)", "Duration (hrs)"),
-                column_config={
-                    "Period Type": st.column_config.SelectboxColumn("Period Type (운전 유형)", options=["Operational", "Maintenance"], default="Operational"),
-                    "Pressure Unit": st.column_config.SelectboxColumn("Pressure Unit", options=["MPa", "kg/mm^2"])
-                }
-            )
-            active_comp["Periods"] = edited_periods.to_dict('records')
+                profile_default = active_comp.get("Level 3 Profile Text", """# Time(hrs), Temperature(C), Stress(MPa)
+0, 25, 0
+10, 538, 150
+50, 538, 120
+100, 538, 110
+110, 300, 150
+120, 25, 0""")
+                
+                active_comp["Level 3 Profile Text"] = st.text_area(
+                    "Time-Temperature-Stress Profile (Time(hrs), Temp(°C), Stress(MPa))",
+                    value=profile_default,
+                    height=200,
+                    help="Enter data with one point per line, separated by commas, tabs, or spaces. Lines starting with # are comments."
+                )
+                
+                active_comp["Level 3 Multiplier"] = st.number_input(
+                    "Lifetime Cycles Multiplier (반복 횟수)",
+                    value=float(active_comp.get("Level 3 Multiplier", 1.0)),
+                    min_value=1.0,
+                    step=1.0,
+                    help="The number of times this transient profile repeats over the component's design life."
+                )
+        else:
+            with st.expander("🕒 Operating Periods (운전 기간)", expanded=True):
+                st.write("Define the operating conditions over the component's life.")
+                periods_df = pd.DataFrame(active_comp.get("Periods", []))
+                
+                required_cols = ["Period Type", "Pressure", "Pressure Unit", "Temperature (C)", "Duration (hrs)", "Von Mises Stress (MPa)"]
+                for col in required_cols:
+                    if col not in periods_df.columns:
+                        periods_df[col] = np.nan
+                        
+                column_order = ["Period Type", "Pressure", "Pressure Unit", "Temperature (C)", "Duration (hrs)"]
+                if "Level 2" in active_comp["Assessment Level"]:
+                    column_order.append("Von Mises Stress (MPa)")
+                    
+                edited_periods = st.data_editor(
+                    periods_df,
+                    num_rows="dynamic",
+                    width="stretch",
+                    column_order=column_order,
+                    column_config={
+                        "Period Type": st.column_config.SelectboxColumn("Period Type (운전 유형)", options=["Operational", "Maintenance"], default="Operational"),
+                        "Pressure Unit": st.column_config.SelectboxColumn("Pressure Unit", options=["MPa", "kg/mm^2"]),
+                        "Von Mises Stress (MPa)": st.column_config.NumberColumn("Von Mises Stress (MPa) [Optional]", min_value=0.0, step=1.0, help="If provided, overrides calculated nominal stress for Level 2.")
+                    }
+                )
+                active_comp["Periods"] = edited_periods.to_dict('records')
             
         st.session_state['components'][selected_idx] = active_comp
-
-with tab2:
-    st.markdown("### Assessment Execution")
-    
-    if st.button("▶ Run Assessment for All Components", type="primary"):
-        with st.spinner("Calculating..."):
-            results_summary = []
-            html_reports = []
-            
-            for idx, comp in enumerate(st.session_state['components']):
-                try:
-                    assessment = CreepAssessment(comp)
-                    res = assessment.assess()
-                    
-                    summary = {
-                        "Component Name": comp.get("Component Name", f"Component {idx+1}"),
-                        "Material": comp.get("Material", "Unknown"),
-                        "Total Periods": len(comp.get("Periods", [])),
-                        "Total Damage": round(res['total_damage'], 6),
-                        "Remaining Life (hrs)": "Infinite" if res['remaining_life'] == float('inf') else round(res['remaining_life'], 1),
-                        "Status": res['status']
-                    }
-                    results_summary.append(summary)
-                    
-                    html_report = generate_html_report(comp, res)
-                    html_reports.append((idx, comp, html_report, res))
-                    
-                except Exception as e:
-                    st.error(f"Error processing component {comp.get('Component Name', idx+1)}: {e}")
-                    
-            if results_summary:
-                df_summary = pd.DataFrame(results_summary)
-                st.success("Calculations Complete!")
-                
-                st.dataframe(df_summary, width="stretch")
-                
-                st.markdown("### Detailed Calculation Trace & Reports")
-                for idx, comp, html, res in html_reports:
-                    comp_name = comp.get("Component Name", f"Component {idx+1}")
-                    with st.expander(f"📄 Report for {comp_name} ({res['status']})"):
-                        st.markdown("#### Calculation Details (Step-by-Step)")
-                        formatted_trace = "<br>".join([line.replace("   ", "&nbsp;&nbsp;&nbsp;") for line in res['trace']])
-                        st.markdown(f'<div style="background-color: #f8f9fa; padding: 20px; border-left: 4px solid #0056b3; font-family: \'Segoe UI\', Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; line-height: 1.6; border-radius: 4px; max-height: 500px; overflow-y: auto; margin-bottom: 20px;">{formatted_trace}</div>', unsafe_allow_html=True)
-                        
-                        st.markdown(f'<div style="text-align: center;"><img src="data:image/png;base64,{res["graph_b64"]}" style="max-width:600px; border: 1px solid #ddd; padding: 10px; border-radius: 4px;"></div>', unsafe_allow_html=True)
-                        
-                        if "creep_life_graph_b64" in res:
-                            st.markdown(f'<div style="text-align: center; margin-top: 15px;"><img src="data:image/png;base64,{res["creep_life_graph_b64"]}" style="max-width:600px; border: 1px solid #ddd; padding: 10px; border-radius: 4px;"></div>', unsafe_allow_html=True)
-                        
-                        b64 = base64.b64encode(html.encode('utf-8')).decode('utf-8')
-                        href = f'<a href="data:text/html;base64,{b64}" download="API579_Report_{comp_name}.html" style="display: inline-block; margin-top: 15px; padding: 0.5em 1em; color: white; background-color: #007bff; text-decoration: none; border-radius: 4px; font-weight: bold;">⬇ Download HTML Report</a>'
-                        st.markdown(href, unsafe_allow_html=True)
+ 
+ with tab2:
+     st.markdown("### Assessment Execution")
+     
+     if st.button("▶ Run Assessment for All Components", type="primary"):
+         with st.spinner("Calculating..."):
+             results_summary = []
+             html_reports = []
+             
+             for idx, comp in enumerate(st.session_state['components']):
+                 try:
+                     assessment = CreepAssessment(comp)
+                     res = assessment.assess()
+                     
+                     summary = {
+                         "Component Name": comp.get("Component Name", f"Component {idx+1}"),
+                         "Material": comp.get("Material", "Unknown"),
+                         "Total Periods": len(comp.get("Periods", [])) if "Level 3" not in comp.get("Assessment Level", "") else f"Level 3 Profile ({len(res.get('level3_profile', []))} pts)",
+                         "Total Damage": round(res['total_damage'], 6),
+                         "Remaining Life (hrs)": "Infinite" if res['remaining_life'] == float('inf') else round(res['remaining_life'], 1),
+                         "Status": res['status']
+                     }
+                     results_summary.append(summary)
+                     
+                     html_report = generate_html_report(comp, res)
+                     html_reports.append((idx, comp, html_report, res))
+                     
+                 except Exception as e:
+                     st.error(f"Error processing component {comp.get('Component Name', idx+1)}: {e}")
+                     
+             if results_summary:
+                 df_summary = pd.DataFrame(results_summary)
+                 st.success("Calculations Complete!")
+                 
+                 st.dataframe(df_summary, width="stretch")
+                 
+                 st.markdown("### Detailed Calculation Trace & Reports")
+                 for idx, comp, html, res in html_reports:
+                     comp_name = comp.get("Component Name", f"Component {idx+1}")
+                     with st.expander(f"📄 Report for {comp_name} ({res['status']})"):
+                         st.markdown("#### Calculation Details (Step-by-Step)")
+                         formatted_trace = "<br>".join([line.replace("   ", "&nbsp;&nbsp;&nbsp;") for line in res['trace']])
+                         st.markdown(f'<div style="background-color: #f8f9fa; padding: 20px; border-left: 4px solid #0056b3; font-family: \'Segoe UI\', Tahoma, Geneva, Verdana, sans-serif; font-size: 15px; line-height: 1.6; border-radius: 4px; max-height: 500px; overflow-y: auto; margin-bottom: 20px;">{formatted_trace}</div>', unsafe_allow_html=True)
+                         
+                         st.markdown(f'<div style="text-align: center;"><img src="data:image/png;base64,{res["graph_b64"]}" style="max-width:600px; border: 1px solid #ddd; padding: 10px; border-radius: 4px;"></div>', unsafe_allow_html=True)
+                         
+                         if "creep_life_graph_b64" in res and res["creep_life_graph_b64"]:
+                             st.markdown(f'<div style="text-align: center; margin-top: 15px;"><img src="data:image/png;base64,{res["creep_life_graph_b64"]}" style="max-width:600px; border: 1px solid #ddd; padding: 10px; border-radius: 4px;"></div>', unsafe_allow_html=True)
+                         
+                         if "cycle_table" in res and res["cycle_table"]:
+                             st.markdown("#### 🔄 Rainflow Cycle Counting Results (Fatigue Analysis)")
+                             df_cycles = pd.DataFrame(res["cycle_table"])
+                             df_cycles.columns = ["Cycle Index", "Stress Range (MPa)", "Mean Stress (MPa)", "Cycle Count", "Stress Amplitude Sa (MPa)", "Allowable Cycles N", "Fatigue Damage (dDf)"]
+                             st.dataframe(df_cycles, use_container_width=True)
+                             
+                         b64 = base64.b64encode(html.encode('utf-8')).decode('utf-8')
+                         href = f'<a href="data:text/html;base64,{b64}" download="API579_Report_{comp_name}.html" style="display: inline-block; margin-top: 15px; padding: 0.5em 1em; color: white; background-color: #007bff; text-decoration: none; border-radius: 4px; font-weight: bold;">⬇ Download HTML Report</a>'
+                         st.markdown(href, unsafe_allow_html=True)
 
 # 3. Export JSON State (Placed at the bottom so it captures the latest session_state)
 st.sidebar.markdown("---")
