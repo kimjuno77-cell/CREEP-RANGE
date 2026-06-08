@@ -375,6 +375,10 @@ class CreepAssessment:
                 if T_assess < self.mat_props['creep_temp_c']:
                     continue
                     
+                if sigma_avg <= 0:
+                    self.trace.append(f"      Step {k+1} ({pt1['Time']}h -> {pt2['Time']}h): Stress={sigma_avg:.1f} MPa is zero or negative (compressive). Creep damage is negligible. Dc=0")
+                    continue
+                    
                 stress_psi = sigma_avg * 145.038
                 T_F = (T_assess * 9/5) + 32
                 T_R = T_F + 460.0
@@ -598,6 +602,16 @@ class CreepAssessment:
                 else:
                     self.trace.append(f"      Maximum Membrane Stress (최대 막응력, sigma_max) = {stress_mH:.4f} MPa")
             
+            if max_stress_mpa <= 0:
+                self.trace.append("      [Note] Stress is zero or negative (compressive). Compressive stress does not cause tensile creep rupture.")
+                self.trace.append("      Creep damage for this period is set to 0.0.")
+                period_results.append({
+                    "j": j, "P_MPa": p_mpa, "T_assess": T_assess, "Duration": duration,
+                    "Stress_MPa": max_stress_mpa, "t_d": float('inf'), "Damage": 0.0,
+                    "Von_Mises_Stress": vm_stress
+                })
+                continue
+                
             stress_psi = max_stress_mpa * 145.038
             self.trace.append(f"      Converted Stress for Properties Lookup (물성치 조회를 위한 응력 변환): {stress_psi:.1f} psi")
             
