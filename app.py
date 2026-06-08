@@ -52,75 +52,7 @@ if uploaded_json is not None:
         except Exception as e:
             st.sidebar.error("Error loading JSON file.")
 
-# 2. Upload Excel Template (Parse multi-sheet)
-st.sidebar.markdown("---")
-template_path = os.path.join(os.path.dirname(__file__), "Assessment of components operating in the creep range_MFC.xlsx")
-if os.path.exists(template_path):
-    with open(template_path, "rb") as f:
-        st.sidebar.download_button(
-            label="⬇ Download Excel Template (엑셀 템플릿 다운로드)",
-            data=f.read(),
-            file_name="API579_Creep_Assessment_Template.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-        
-uploaded_excel = st.sidebar.file_uploader("Upload Filled Excel Template", type=['xlsx', 'xls'])
-if uploaded_excel is not None:
-    if st.session_state.get('last_uploaded_excel_id') != uploaded_excel.file_id:
-        try:
-            xls = pd.ExcelFile(uploaded_excel)
-            new_components = []
-            for sheet_name in xls.sheet_names:
-                df = pd.read_excel(xls, sheet_name=sheet_name, header=None)
-                
-                try:
-                    comp = {
-                        "Component Name": str(df.iloc[3, 11]) if pd.notna(df.iloc[3, 11]) else sheet_name,
-                        "Component Type": "Combined (동체+경판)",
-                        "Material": str(df.iloc[4, 11]) if pd.notna(df.iloc[4, 11]) else "Carbon Steel",
-                        "Inside Diameter (mm)": float(df.iloc[5, 11]) if pd.notna(df.iloc[5, 11]) else 0.0,
-                        "Shell Thickness (mm)": float(df.iloc[6, 11]) if pd.notna(df.iloc[6, 11]) else 0.0,
-                        "Head Thickness (mm)": float(df.iloc[7, 11]) if pd.notna(df.iloc[7, 11]) else 0.0,
-                        "Future Corrosion Allowance (mm)": float(df.iloc[8, 11]) if pd.notna(df.iloc[8, 11]) else 0.0,
-                        "Weld Joint Efficiency (E)": float(df.iloc[9, 11]) if pd.notna(df.iloc[9, 11]) else 1.0,
-                        "Weld Seam Temp Adjustment": True,
-                        "Assessment Level": "API 579-1_ASME FFS-1 Level 1",
-                        "Periods": []
-                    }
-                    
-                    # Find the columns for periods (Row 12 is 'j')
-                    for col in range(5, df.shape[1]):
-                        j_val = df.iloc[12, col]
-                        if pd.notna(j_val) and isinstance(j_val, (int, float)) and j_val > 0:
-                            try:
-                                p_str = str(df.iloc[13, 1])
-                                p_unit = "kg/mm^2" if "kg/mm" in p_str or "kg/mm2" in p_str else "MPa"
-                                
-                                pressure = float(df.iloc[13, col]) if pd.notna(df.iloc[13, col]) else 0.0
-                                temp = float(df.iloc[14, col]) if pd.notna(df.iloc[14, col]) else 0.0
-                                duration = float(df.iloc[15, col]) if pd.notna(df.iloc[15, col]) else 0.0
-                                
-                                if pressure > 0 or temp > 0 or duration > 0:
-                                    comp["Periods"].append({
-                                        "Period Type": "Operational",
-                                        "Pressure": pressure,
-                                        "Pressure Unit": p_unit,
-                                        "Temperature (C)": temp,
-                                        "Duration (hrs)": duration
-                                    })
-                            except Exception:
-                                continue
-                    new_components.append(comp)
-                except Exception as inner_e:
-                    st.sidebar.warning(f"Could not fully parse sheet '{sheet_name}'.")
-            
-            if new_components:
-                st.session_state['components'] = new_components
-                st.session_state['last_uploaded_excel_id'] = uploaded_excel.file_id
-                st.sidebar.success(f"Loaded {len(new_components)} components from Excel!")
-                
-        except Exception as e:
-            st.sidebar.error(f"Failed to parse Excel: {e}")
+
 
 # --- Main Content Tabs ---
 tab1, tab2 = st.tabs(["📝 Input Data (Components)", "📊 Results & Report"])
