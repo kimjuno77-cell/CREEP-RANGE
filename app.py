@@ -78,6 +78,7 @@ example_4_component = {
     "Weld Joint Efficiency (E)": 1.0,
     "Weld Seam Temp Adjustment": False,
     "Assessment Level": "API 579-1_ASME FFS-1 Level 3",
+    "Crack Geometry": "RCSCLE2 (Cylinder, Outside Surface, Longitudinal)",
     "Flaw Depth a (mm)": 7.62,       # 0.30 in
     "Flaw Length 2c (mm)": 121.92,   # 4.80 in
     "Periods": [
@@ -224,11 +225,20 @@ with tab1:
         
         
         if is_level3:
-            with st.expander("🛠️ Level 3 Flaw Dimensions (Crack Growth)", expanded=True):
+            with st.expander("🛠️ Level 3 Flaw Dimensions & Geometry (Crack Growth)", expanded=True):
+                geoms = [
+                    "RCSCLE2 (Cylinder, Outside Surface, Longitudinal)",
+                    "RCSCCI2 (Cylinder, Inside Surface, Circumferential)",
+                    "RCSCCE2 (Cylinder, Outside Surface, Circumferential)",
+                    "RSSCSE (Sphere, Surface Crack)"
+                ]
+                geom_val = active_comp.get("Crack Geometry", "RCSCLE2 (Cylinder, Outside Surface, Longitudinal)")
+                active_comp["Crack Geometry"] = st.selectbox("Crack Geometry (균열 형상 모델)", geoms, index=geoms.index(geom_val) if geom_val in geoms else 0)
+                
                 c1, c2 = st.columns(2)
                 active_comp["Flaw Depth a (mm)"] = c1.number_input("Flaw Depth (a) / 균열 깊이 (mm)", value=float(active_comp.get("Flaw Depth a (mm)", 7.62)))
                 active_comp["Flaw Length 2c (mm)"] = c2.number_input("Flaw Length (2c) / 균열 길이 (mm)", value=float(active_comp.get("Flaw Length 2c (mm)", 121.92)))
-                st.info("Note: Example 4 exclusively uses an outside surface longitudinal crack geometry (RCSCLE2).")
+                st.info("Note: Select the appropriate crack geometry. M_s (Reference Stress parameter) will be calculated dynamically.")
 
             with st.expander("📈 Time-Temperature-Stress Profile (Level 3)", expanded=True):
                 st.write("Enter the startup, dwell, and shutdown history of the component.")
