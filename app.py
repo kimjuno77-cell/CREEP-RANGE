@@ -32,6 +32,59 @@ default_component = {
     ]
 }
 
+
+example_1_component = {
+    "Component Name": "Example Problem 1 (Cylindrical Shell)",
+    "Component Type": "Shell (동체)",
+    "Material": "Carbon Steel",
+    "Inside Diameter (mm)": 1524.0,  # 60 in
+    "Shell Thickness (mm)": 9.525,   # 0.375 in
+    "Head Thickness (mm)": 0.0,
+    "Future Corrosion Allowance (mm)": 2.54, # 0.1 in
+    "Weld Joint Efficiency (E)": 1.0,
+    "Weld Seam Temp Adjustment": True, # Excursion with weld seam
+    "Assessment Level": "API 579-1_ASME FFS-1 Level 1",
+    "Periods": [
+        {"Period Type": "Operational", "Pressure": 0.5695, "Pressure Unit": "MPa", "Temperature (C)": 510.0, "Duration (hrs)": 20.0} # 82.6 psig, 950 F
+    ]
+}
+
+example_2_component = {
+    "Component Name": "Example Problem 2 (Cylindrical Shell)",
+    "Component Type": "Shell (동체)",
+    "Material": "Carbon Steel",
+    "Inside Diameter (mm)": 1524.0,  # 60 in
+    "Shell Thickness (mm)": 9.525,   # 0.375 in
+    "Head Thickness (mm)": 0.0,
+    "Future Corrosion Allowance (mm)": 2.54, # 0.1 in
+    "Weld Joint Efficiency (E)": 1.0,
+    "Weld Seam Temp Adjustment": False,
+    "Assessment Level": "API 579-1_ASME FFS-1 Level 1",
+    "Periods": [
+        {"Period Type": "Operational", "Pressure": 0.34474, "Pressure Unit": "MPa", "Temperature (C)": 454.44, "Duration (hrs)": 87600.0}, # 50 psig, 850 F
+        {"Period Type": "Operational", "Pressure": 0.34474, "Pressure Unit": "MPa", "Temperature (C)": 510.0, "Duration (hrs)": 20.0}, # 50 psig, 950 F
+        {"Period Type": "Operational", "Pressure": 0.34474, "Pressure Unit": "MPa", "Temperature (C)": 454.44, "Duration (hrs)": 43800.0} # 50 psig, 850 F
+    ]
+}
+
+example_4_component = {
+    "Component Name": "Example Problem 4 (Crack Growth)",
+    "Component Type": "Shell (동체)",
+    "Material": "316 SS",
+    "Inside Diameter (mm)": 1524.0,  # 60 in
+    "Shell Thickness (mm)": 38.1,    # 1.5 in
+    "Head Thickness (mm)": 0.0,
+    "Future Corrosion Allowance (mm)": 0.0,
+    "Weld Joint Efficiency (E)": 1.0,
+    "Weld Seam Temp Adjustment": False,
+    "Assessment Level": "API 579-1_ASME FFS-1 Level 3",
+    "Flaw Depth a (mm)": 7.62,       # 0.30 in
+    "Flaw Length 2c (mm)": 121.92,   # 4.80 in
+    "Periods": [
+        {"Period Type": "Operational", "Pressure": 3.44738, "Pressure Unit": "MPa", "Temperature (C)": 593.33, "Duration (hrs)": 7392.0} # 500 psig, 1100 F
+    ]
+}
+
 example_3_component = {
     "Component Name": "Example Problem 3 (Heater Tube)",
     "Component Type": "Pipe (배관)",
@@ -52,7 +105,7 @@ example_3_component = {
 
 # --- Session State Initialization ---
 if 'components' not in st.session_state:
-    st.session_state['components'] = [example_3_component]
+    st.session_state['components'] = [example_1_component, example_2_component, example_3_component, example_4_component]
 
 # --- Sidebar: Project Files ---
 st.sidebar.header("📁 Project Files")
@@ -146,7 +199,14 @@ with tab1:
             
         is_level3 = "Level 3" in active_comp["Assessment Level"]
         
+        
         if is_level3:
+            with st.expander("🛠️ Level 3 Flaw Dimensions (Crack Growth)", expanded=True):
+                c1, c2 = st.columns(2)
+                active_comp["Flaw Depth a (mm)"] = c1.number_input("Flaw Depth (a) / 균열 깊이 (mm)", value=float(active_comp.get("Flaw Depth a (mm)", 7.62)))
+                active_comp["Flaw Length 2c (mm)"] = c2.number_input("Flaw Length (2c) / 균열 길이 (mm)", value=float(active_comp.get("Flaw Length 2c (mm)", 121.92)))
+                st.info("Note: Example 4 exclusively uses an outside surface longitudinal crack geometry (RCSCLE2).")
+
             with st.expander("📈 Time-Temperature-Stress Profile (Level 3)", expanded=True):
                 st.write("Enter the startup, dwell, and shutdown history of the component.")
                 
