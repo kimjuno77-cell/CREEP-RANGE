@@ -361,7 +361,10 @@ class CreepAssessment:
 
             if T_assess < self.mat_props['creep_temp_c']:
                 self.trace.append(f"   T_assess < T_c ({T_c:.1f} C), creep damage is negligible.")
-                period_results.append({"j": j, "T_c": temp_c, "T_F": T_F, "P_psi": p_psi, "sigma_psi": 0, "eps_dot": 0, "t_m": duration, "t_d": float('inf'), "Dc": 0})
+                period_results.append({
+                    'j': j, 'P_MPa': p_mpa, 'T_assess': temp_c, 'Duration': duration,
+                    'Stress_MPa': 0, 't_d': float('inf'), 'Damage': 0, 'Von_Mises_Stress': 0
+                })
                 continue
 
             stress_psi = p_psi * (R_in / tc_in + 0.6)
@@ -393,7 +396,11 @@ class CreepAssessment:
             self.trace.append(f"   Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
             total_damage += damage
 
-            period_results.append({"j": j, "T_c": temp_c, "T_F": T_F, "P_psi": p_psi, "sigma_psi": stress_psi, "eps_dot": eps_dot, "t_m": duration, "t_d": L, "Dc": damage})
+            stress_mpa = stress_psi / 145.038
+            period_results.append({
+                'j': j, 'P_MPa': p_mpa, 'T_assess': temp_c, 'Duration': duration,
+                'Stress_MPa': stress_mpa, 't_d': L, 'Damage': damage, 'Von_Mises_Stress': stress_mpa
+            })
 
         self.trace.append("-" * 60)
         self.trace.append(f"Total Damage (D_total) = sum(Dc) = {total_damage:.6f}")
@@ -471,7 +478,10 @@ class CreepAssessment:
 
             if T_assess < self.mat_props['creep_temp_c']:
                 self.trace.append(f"   T_assess < T_c ({T_c:.1f} C), creep damage is negligible.")
-                period_results.append({"j": j, "T_c": temp_c, "T_F": T_F, "P_psi": p_psi, "sigma_psi": 0, "LMP": 0, "t_m": duration, "t_d": float('inf'), "Dc": 0})
+                period_results.append({
+                    'j': j, 'P_MPa': p_mpa, 'T_assess': temp_c, 'Duration': duration,
+                    'Stress_MPa': 0, 't_d': float('inf'), 'Damage': 0, 'Von_Mises_Stress': 0
+                })
                 continue
 
             stress_psi = p_psi * (R_in / tc_in + 0.6)
@@ -503,7 +513,13 @@ class CreepAssessment:
             self.trace.append(f"   Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
             total_damage += damage
 
-            period_results.append({"j": j, "T_c": temp_c, "T_F": T_F, "P_psi": p_psi, "sigma_psi": stress_psi, "LMP": LMP_val, "t_m": duration, "t_d": L, "Dc": damage})
+            stress_mpa = stress_psi / 145.038
+            self.plot_points.append({"LMP": LMP_val * 1000.0, "Stress": stress_mpa, "j": j})
+
+            period_results.append({
+                'j': j, 'P_MPa': p_mpa, 'T_assess': temp_c, 'Duration': duration,
+                'Stress_MPa': stress_mpa, 't_d': L, 'Damage': damage, 'Von_Mises_Stress': stress_mpa
+            })
 
         self.trace.append("-" * 60)
         self.trace.append(f"Total Damage (D_total) = sum(Dc) = {total_damage:.6f}")
