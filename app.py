@@ -103,9 +103,25 @@ example_3_component = {
     ]
 }
 
+import copy
+
+def on_level_change():
+    idx = st.session_state.get('active_comp_idx', 0)
+    level_val = st.session_state[f"level_sel_{idx}"]
+    
+    if "Level 1" in level_val:
+        st.session_state['components'][idx] = copy.deepcopy(example_1_component)
+    elif "Level 2" in level_val:
+        st.session_state['components'][idx] = copy.deepcopy(example_3_component)
+    elif "Level 3" in level_val:
+        st.session_state['components'][idx] = copy.deepcopy(example_4_component)
+        
+    st.session_state['components'][idx]["Assessment Level"] = level_val
+
 # --- Session State Initialization ---
 if 'components' not in st.session_state:
-    st.session_state['components'] = [example_1_component, example_2_component, example_3_component, example_4_component]
+    st.session_state['components'] = [example_1_component]
+
 
 # --- Sidebar: Project Files ---
 st.sidebar.header("📁 Project Files")
@@ -167,7 +183,14 @@ with tab1:
                 "ASME B31.3 Appendix V"
             ]
             level_val = active_comp.get("Assessment Level", "API 579-1_ASME FFS-1 Level 1")
-            active_comp["Assessment Level"] = st.selectbox("Assessment Level (평가 레벨)", levels, index=levels.index(level_val) if level_val in levels else 0)
+            st.session_state['active_comp_idx'] = selected_idx
+            active_comp["Assessment Level"] = st.selectbox(
+                "Assessment Level (평가 레벨)", 
+                levels, 
+                index=levels.index(level_val) if level_val in levels else 0,
+                key=f"level_sel_{selected_idx}",
+                on_change=on_level_change
+            )
             
             st.info("""
 **Assessment Level Guide (평가 레벨 안내)**
@@ -263,32 +286,33 @@ with tab1:
 with tab2:
     st.markdown("### Assessment Execution")
     
-    if st.button("▶ Run Assessment for All Components", type="primary"):
+    if st.button("▶ Run Assessment for Selected Component (현재 조건 계산)", type="primary"):
         with st.spinner("Calculating..."):
             results_summary = []
             html_reports = []
             
-            for idx, comp in enumerate(st.session_state['components']):
-                try:
-                    assessment = CreepAssessment(comp)
-                    res = assessment.assess()
-                    
-                    summary = {
-                        "Component Name": comp.get("Component Name", f"Component {idx+1}"),
-                        "Material": comp.get("Material", "Unknown"),
-                        "Total Periods": len(comp.get("Periods", [])) if "Level 3" not in comp.get("Assessment Level", "") else f"Level 3 Profile ({len(res.get('level3_profile', []))} pts)",
-                        "Total Damage": round(res['total_damage'], 6),
-                        "Remaining Life (hrs)": "Infinite" if res['remaining_life'] == float('inf') else round(res['remaining_life'], 1),
-                        "Status": res['status']
-                    }
-                    results_summary.append(summary)
-                    
-                    html_report = generate_html_report(comp, res)
-                    html_reports.append((idx, comp, html_report, res))
-                    
-                except Exception as e:
-                    st.error(f"Error processing component {comp.get('Component Name', idx+1)}: {e}")
-                    
+            idx = selected_idx
+            comp = st.session_state['components'][idx]
+            try:
+                assessment = CreepAssessment(comp)
+                res = assessment.assess()
+                
+                summary = {
+                    "Component Name": comp.get("Component Name", f"Component {idx+1}"),
+                    "Material": comp.get("Material", "Unknown"),
+                    "Total Periods": len(comp.get("Periods", [])) if "Level 3" not in comp.get("Assessment Level", "") else f"Level 3 Profile ({len(res.get('level3_profile', []))} pts)",
+                    "Total Damage": round(res['total_damage'], 6),
+                    "Remaining Life (hrs)": "Infinite" if res['remaining_life'] == float('inf') else round(res['remaining_life'], 1),
+                    "Status": res['status']
+                }
+                results_summary.append(summary)
+                
+                html_report = generate_html_report(comp, res)
+                html_reports.append((idx, comp, html_report, res))
+                
+            except Exception as e:
+                st.error(f"Error processing component {comp.get('Component Name', idx+1)}: {e}")
+                
             if results_summary:
                 df_summary = pd.DataFrame(results_summary)
                 st.success("Calculations Complete!")
