@@ -361,6 +361,7 @@ class CreepAssessment:
 
             if T_assess < self.mat_props['creep_temp_c']:
                 self.trace.append(f"   T_assess < T_c ({T_c:.1f} C), creep damage is negligible.")
+                period_results.append({"j": j, "T_c": temp_c, "T_F": T_F, "P_psi": p_psi, "sigma_psi": 0, "eps_dot": 0, "t_m": duration, "t_d": float('inf'), "Dc": 0})
                 continue
 
             stress_psi = p_psi * (R_in / tc_in + 0.6)
@@ -392,20 +393,25 @@ class CreepAssessment:
             self.trace.append(f"   Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
             total_damage += damage
 
+            period_results.append({"j": j, "T_c": temp_c, "T_F": T_F, "P_psi": p_psi, "sigma_psi": stress_psi, "eps_dot": eps_dot, "t_m": duration, "t_d": L, "Dc": damage})
+
         self.trace.append("-" * 60)
         self.trace.append(f"Total Damage (D_total) = sum(Dc) = {total_damage:.6f}")
 
         status = "Acceptable (허용됨)" if total_damage <= 1.0 else "Unacceptable (불가)"
         self.trace.append(f"Since D_total is {'<=' if total_damage <= 1.0 else '>'} 1.0, the component is {status}.")
 
+        graph_b64 = self.generate_damage_graph(period_results)
+        creep_life_graph_b64 = self.generate_creep_life_graph(period_results)
+
         return {
             "total_damage": total_damage,
             "remaining_life": float('inf') if total_damage == 0 else 0, # simplified
             "status": status,
             "trace": self.trace,
-            "period_results": [],
-            "graph_b64": "",
-            "creep_life_graph_b64": ""
+            "period_results": period_results,
+            "graph_b64": graph_b64,
+            "creep_life_graph_b64": creep_life_graph_b64
         }
     def assess_level_1(self):
         self.trace.append("=== Level 1 Creep Assessment (API 579-1/ASME FFS-1) ===")
@@ -465,6 +471,7 @@ class CreepAssessment:
 
             if T_assess < self.mat_props['creep_temp_c']:
                 self.trace.append(f"   T_assess < T_c ({T_c:.1f} C), creep damage is negligible.")
+                period_results.append({"j": j, "T_c": temp_c, "T_F": T_F, "P_psi": p_psi, "sigma_psi": 0, "LMP": 0, "t_m": duration, "t_d": float('inf'), "Dc": 0})
                 continue
 
             stress_psi = p_psi * (R_in / tc_in + 0.6)
@@ -496,20 +503,25 @@ class CreepAssessment:
             self.trace.append(f"   Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
             total_damage += damage
 
+            period_results.append({"j": j, "T_c": temp_c, "T_F": T_F, "P_psi": p_psi, "sigma_psi": stress_psi, "LMP": LMP_val, "t_m": duration, "t_d": L, "Dc": damage})
+
         self.trace.append("-" * 60)
         self.trace.append(f"Total Damage (D_total) = sum(Dc) = {total_damage:.6f}")
 
         status = "Acceptable (허용됨)" if total_damage <= 1.0 else "Unacceptable (불가)"
         self.trace.append(f"Since D_total is {'<=' if total_damage <= 1.0 else '>'} 1.0, the component is {status}.")
 
+        graph_b64 = self.generate_lmp_graph()
+        creep_life_graph_b64 = self.generate_creep_life_graph(period_results)
+
         return {
             "total_damage": total_damage,
             "remaining_life": float('inf') if total_damage == 0 else 0, # simplified
             "status": status,
             "trace": self.trace,
-            "period_results": [],
-            "graph_b64": "",
-            "creep_life_graph_b64": ""
+            "period_results": period_results,
+            "graph_b64": graph_b64,
+            "creep_life_graph_b64": creep_life_graph_b64
         }
     def assess_level_3_crack_growth(self):
         self.trace.append("=== Level 3 Creep Crack Growth Assessment (API 579-1 Part 10) ===")
@@ -645,13 +657,15 @@ class CreepAssessment:
 
         status = "Acceptable (허용됨)"
 
+        graph_b64 = self.generate_crack_growth_graph(growth_data)
+
         return {
             "total_damage": 0.22237,
             "remaining_life": 113568.0,
             "status": status,
             "trace": self.trace,
             "period_results": [],
-            "graph_b64": "",
+            "graph_b64": graph_b64,
             "creep_life_graph_b64": ""
         }
     def assess(self):
@@ -1104,6 +1118,40 @@ class CreepAssessment:
         plt.close()
         buf.seek(0)
         return base64.b64encode(buf.read()).decode('utf-8')
+
+    def generate_crack_growth_graph(self, growth_data):
+        import io
+        import base64
+        import matplotlib.pyplot as plt
+
+        times = [r[0] for r in growth_data]
+        a_vals = [r[1] for r in growth_data]
+
+        fig, ax1 = plt.subplots(figsize=(8, 5))
+        ax1.plot(times, a_vals, 'r-o', linewidth=2, label="Crack Depth (a)")
+        ax1.set_xlabel('Time (hours)')
+        ax1.set_ylabel('Crack Depth a (inches)', color='r')
+        ax1.tick_params('y', colors='r')
+        ax1.set_title('API 579 Level 3 Crack Growth Assessment')
+        ax1.grid(True, linestyle='--', alpha=0.7)
+
+        # second axis for Damage
+        ax2 = ax1.twinx()
+        damage_vals = [r[6] for r in growth_data]
+        ax2.plot(times, damage_vals, 'b-s', linewidth=2, label="Cumulative Damage (D_total)")
+        ax2.set_ylabel('Cumulative Damage (D_total)', color='b')
+        ax2.tick_params('y', colors='b')
+
+        # add threshold line for damage
+        ax2.axhline(0.8, color='k', linestyle='--', linewidth=1, label="Damage Limit (0.8)")
+
+        fig.tight_layout()
+
+        buf = io.BytesIO()
+        plt.savefig(buf, format='png', dpi=100, bbox_inches='tight')
+        plt.close(fig)
+        return base64.b64encode(buf.getvalue()).decode('utf-8')
+
 
     def generate_damage_graph(self, period_results):
         plt.figure(figsize=(8, 5))
