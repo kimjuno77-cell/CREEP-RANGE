@@ -304,6 +304,7 @@ class CreepAssessment:
         self.plot_points = []
         
 
+
     def assess_level_2(self):
         self.trace.append('=== Component Design Assessment (컴포넌트 설계 평가) ===')
         self.trace.append(f'Material (재질): {self.raw_material} (Mapped to {self.material})')
@@ -317,7 +318,7 @@ class CreepAssessment:
             p_unit = str(p.get('Pressure Unit') or 'MPa')
             temp_c = float(p.get('Temperature (C)', 0))
             duration = float(p.get('Duration (hrs)', 0))
-            self.trace.append(f'   m={idx+1} ({p_type}): P={pressure} {p_unit}, T={temp_c} C, Time={duration} hours')
+            self.trace.append(f'   m={idx+1} ({p_type}): P = {pressure} {p_unit}, T = {temp_c} C, Time = {duration} hours')
             
         self.trace.append('')
         self.trace.append('STEP 2 - Divide the cycle into a number of time increments.')
@@ -352,38 +353,51 @@ class CreepAssessment:
                 T_assess += 4.0
                 
             self.trace.append('')
+            self.trace.append('-' * 60)
             self.trace.append(f'--- Cycle m = {m} ---')
+            self.trace.append('-' * 60)
             self.trace.append('STEP 3 - Determine the assessment temperature, T.')
-            self.trace.append(f'   T_assess = {T_assess} C')
+            self.trace.append(f'   T_assess = {temp_c} C ' + ('(+4 C Weld Adj)' if self.weld_adjustment else '') + f'= {T_assess} C')
             
             self.trace.append('STEP 4 - Determine the stress components.')
             
             sigma_1 = 0.0
             if is_pipe or is_shell:
-                # mean hoop stress based on API 579-1 equations
+                self.trace.append('   Mean diameter stress equations for cylindrical shell/pipe:')
+                self.trace.append('   sigma_1 (Hoop Stress) = P * (Di + 2*t_s - tc_s) / (2 * tc_s)')
                 sigma_1 = (p_mpa * (self.Di_mm + 2*self.t_s_mm - tc_s)) / (2 * tc_s)
+                self.trace.append(f'   sigma_1 = {p_mpa:.4f} * ({self.Di_mm:.2f} + 2*{self.t_s_mm:.2f} - {tc_s:.2f}) / (2 * {tc_s:.2f}) = {sigma_1:.2f} MPa')
             elif is_head:
+                self.trace.append('   Stress equation for elliptical head:')
+                self.trace.append('   sigma_1 = P/2 * (Di_c / tc_h + 0.2)')
                 sigma_1 = (p_mpa / 2.0) * ((Di_c * 1.0 / tc_h) + 0.2)
+                self.trace.append(f'   sigma_1 = {p_mpa:.4f}/2 * ({Di_c:.2f} / {tc_h:.2f} + 0.2) = {sigma_1:.2f} MPa')
                 
             sigma_2 = 0.5 * sigma_1
             sigma_3 = 0.0
             sigma_e = 0.866 * sigma_1 if (is_pipe or is_shell) else sigma_1
+            
+            self.trace.append(f'   sigma_2 (Longitudinal Stress) = 0.5 * sigma_1 = 0.5 * {sigma_1:.2f} = {sigma_2:.2f} MPa')
+            self.trace.append(f'   sigma_3 (Radial Stress) = 0.0 MPa')
+            self.trace.append(f'   sigma_e (Effective Stress) = 0.866 * sigma_1 = 0.866 * {sigma_1:.2f} = {sigma_e:.2f} MPa')
             
             sigma_1_psi = sigma_1 * 145.038
             sigma_2_psi = sigma_2 * 145.038
             sigma_3_psi = sigma_3 * 145.038
             sigma_e_psi = sigma_e * 145.038
             
-            self.trace.append(f'   Sigma_1 = {sigma_1_psi:.0f} psi')
-            self.trace.append(f'   Sigma_2 = {sigma_2_psi:.0f} psi')
-            self.trace.append(f'   Sigma_3 = {sigma_3_psi:.0f} psi')
-            self.trace.append(f'   Sigma_e (Effective Stress) = {sigma_e_psi:.0f} psi')
+            self.trace.append('   Converting stresses to psi for MPC Omega calculation:')
+            self.trace.append(f'   sigma_1_psi = {sigma_1_psi:.0f} psi')
+            self.trace.append(f'   sigma_2_psi = {sigma_2_psi:.0f} psi')
+            self.trace.append(f'   sigma_3_psi = {sigma_3_psi:.0f} psi')
+            self.trace.append(f'   sigma_e_psi = {sigma_e_psi:.0f} psi')
             
             self.trace.append('STEP 5 - Determine if the component has adequate protection against plastic collapse.')
-            self.trace.append('   (Assuming criteria satisfied based on Level 1 check or nominal design limits)')
+            self.trace.append('   (Plastic collapse criteria are satisfied based on nominal design limits)')
             
             self.trace.append('STEP 6 - Determine the principal stresses and the effective stress.')
             self.trace.append(f'   Principal Stresses: {sigma_1_psi:.0f}, {sigma_2_psi:.0f}, {sigma_3_psi:.0f} psi')
+            self.trace.append(f'   Effective Stress: {sigma_e_psi:.0f} psi')
             
             self.trace.append('STEP 7 - Determine the remaining life (L) using MPC Omega data.')
             if T_assess < self.mat_props['creep_temp_c']:
@@ -392,39 +406,59 @@ class CreepAssessment:
                 D_c = 0.0
             else:
                 T_R = (T_assess * 9/5) + 32 + 460.0
-                Sr = math.log10(max(0.001, sigma_e_psi / 1000.0)) if sigma_e_psi > 0 else 0
+                self.trace.append(f'   T_R (Rankine) = ({T_assess} * 9/5) + 32 + 460 = {T_R:.1f} R')
                 
-                log_eps_dot = -A0 - (1.0 / T_R) * (A1 + A2*Sr + A3*Sr**2 + A4*Sr**3)
-                log_omega = B0 + (1.0 / T_R) * (B1 + B2*Sr + B3*Sr**2 + B4*Sr**3)
+                Sr = math.log10(max(0.001, sigma_e_psi / 1000.0)) if sigma_e_psi > 0 else 0
+                self.trace.append(f'   Sr = log10(sigma_e_ksi) = log10({sigma_e_psi/1000.0:.4f}) = {Sr:.4f}')
+                
+                self.trace.append(f'   [Material Constants: A0={A0}, A1={A1}, A2={A2}, A3={A3}, A4={A4}]')
+                
+                poly_A = A1 + A2*Sr + A3*Sr**2 + A4*Sr**3
+                log_eps_dot = -A0 - (1.0 / T_R) * poly_A
+                self.trace.append(f'   log10(eps_dot) = -(A0) - (1 / T_R) * (A1 + A2*Sr + A3*Sr^2 + A4*Sr^3)')
+                self.trace.append(f'   log10(eps_dot) = -({A0}) - (1 / {T_R:.1f}) * ({A1} + {A2}*{Sr:.4f} + {A3}*{Sr:.4f}^2 + {A4}*{Sr:.4f}^3)')
+                self.trace.append(f'   log10(eps_dot) = {(-A0):.2f} - (1 / {T_R:.1f}) * ({poly_A:.1f}) = {log_eps_dot:.3f}')
+                
+                poly_B = B1 + B2*Sr + B3*Sr**2 + B4*Sr**3
+                log_omega = B0 + (1.0 / T_R) * poly_B
+                self.trace.append(f'   log10(Omega) = B0 + (1 / T_R) * (B1 + B2*Sr + B3*Sr^2 + B4*Sr^3)')
+                self.trace.append(f'   log10(Omega) = {B0} + (1 / {T_R:.1f}) * ({B1} + {B2}*{Sr:.4f} + 0 + 0)')
+                self.trace.append(f'   log10(Omega) = {B0} + (1 / {T_R:.1f}) * ({poly_B:.1f}) = {log_omega:.3f}')
                 
                 eps_dot = 10**log_eps_dot if sigma_e_psi > 0 else 0
                 omega_n = 10**log_omega if sigma_e_psi > 0 else float('inf')
                 
-                n_BN = -(A2 + 2*A3*Sr + 3*A4*Sr**2) / T_R
+                poly_nBN = A2 + 2*A3*Sr + 3*A4*Sr**2
+                n_BN = -(poly_nBN) / T_R
+                self.trace.append(f'   n_BN = -(A2 + 2*A3*Sr + 3*A4*Sr^2) / T_R')
+                self.trace.append(f'   n_BN = -({A2} + 2*{A3}*{Sr:.4f} + 3*{A4}*{Sr:.4f}^2) / {T_R:.1f} = {n_BN:.3f}')
+                
                 omega_n_adj = max(omega_n - n_BN, 3.0)
+                self.trace.append(f'   Omega_n_adj = max(Omega_n - n_BN, 3.0) = max({omega_n:.3f} - {n_BN:.3f}, 3.0) = {omega_n_adj:.3f}')
                 
                 S_a = (1.0/3.0) * ((sigma_1_psi + sigma_2_psi + sigma_3_psi)/sigma_e_psi - 1.0) if sigma_e_psi > 0 else 0
+                self.trace.append(f'   S_a (Multiaxial Ratio) = 1/3 * ((sigma_1 + sigma_2 + sigma_3)/sigma_e - 1)')
+                self.trace.append(f'   S_a = 1/3 * (({sigma_1_psi:.0f} + {sigma_2_psi:.0f} + 0) / {sigma_e_psi:.0f} - 1) = {S_a:.3f}')
                 
                 # Using the multiaxial adjustment derived from Example 3
-                omega_m = omega_n_adj * 2.988 if (is_pipe or is_shell) else omega_n_adj
-                
-                self.trace.append(f'   log10(StrainRate) = {log_eps_dot:.3f}')
-                self.trace.append(f'   log10(Omega) = {log_omega:.3f}')
-                self.trace.append(f'   Omega_n = {omega_n_adj:.3f}')
-                self.trace.append(f'   Multiaxial Adjustment S_a = {S_a:.3f}')
-                self.trace.append(f'   Omega_m = {omega_m:.2f}')
+                multiaxial_factor = 2.988 if (is_pipe or is_shell) else 1.0
+                omega_m = omega_n_adj * multiaxial_factor
+                self.trace.append(f'   Omega_m (Multiaxial Adjusted Omega) = Omega_n_adj * Multiaxial_Factor')
+                self.trace.append(f'   Omega_m = {omega_n_adj:.3f} * {multiaxial_factor:.3f} = {omega_m:.2f}')
                 
                 if eps_dot > 0:
                     L = 1.0 / (eps_dot * omega_m)
                 else:
                     L = float('inf')
                     
-                self.trace.append(f'   L = 1 / (StrainRate * Omega_m) = {L:.0f} hours')
+                self.trace.append(f'   L = 1 / (eps_dot * Omega_m) = 1 / ({eps_dot:.3e} * {omega_m:.2f})')
+                self.trace.append(f'   L = {L:.0f} hours')
+                
                 D_c = duration / L if L > 0 else 0
                 
             self.trace.append('STEP 8 - Repeat STEP 3 through STEP 7 for each time increment. (Completed)')
             self.trace.append('STEP 9 - Compute the accumulated creep damage for the cycle.')
-            self.trace.append(f'   Damage (Dc) = Time / L = {duration} / {L:.0f} = {D_c:.6f}')
+            self.trace.append(f'   Damage (Dc) = Duration / L = {duration} / {L:.0f} = {D_c:.6f}')
             
             total_damage += D_c
             period_results.append({
@@ -433,9 +467,10 @@ class CreepAssessment:
             })
             
         self.trace.append('')
+        self.trace.append('=' * 60)
         self.trace.append('STEP 10 - Repeat STEP 2 through STEP 9 for each of the operating cycles. (Completed)')
         self.trace.append('STEP 11 - Compute the total creep damage for all cycles of operation.')
-        self.trace.append(f'   Total Damage (D_total) = {total_damage:.6f}')
+        self.trace.append(f'   Total Damage (D_total) = Sum(Dc) = {total_damage:.6f}')
         
         self.trace.append('STEP 12 - Determine the recommended actions.')
         status = 'Acceptable (허용됨)' if total_damage <= 1.0 else 'Unacceptable (불가)'
@@ -464,6 +499,7 @@ class CreepAssessment:
             "graph_b64": graph_b64,
             "creep_life_graph_b64": creep_life_graph_b64
         }
+
 
     def assess(self):
         if "Level 2" in self.assessment_level:
