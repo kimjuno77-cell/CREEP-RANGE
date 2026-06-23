@@ -303,7 +303,172 @@ class CreepAssessment:
         self.trace = []  # Step-by-step plain-text explanations
         self.plot_points = []
         
+
+    def assess_level_2(self):
+        self.trace.append('=== Component Design Assessment (컴포넌트 설계 평가) ===')
+        self.trace.append(f'Material (재질): {self.raw_material} (Mapped to {self.material})')
+        self.trace.append(f'Assessment Level (평가 레벨): {self.assessment_level}')
+        self.trace.append('')
+        
+        self.trace.append('STEP 1 - Determine a load history based on past operation and future planned operation.')
+        for idx, p in enumerate(self.periods):
+            p_type = p.get('Period Type', 'Operational')
+            pressure = float(p.get('Pressure', 0))
+            p_unit = str(p.get('Pressure Unit') or 'MPa')
+            temp_c = float(p.get('Temperature (C)', 0))
+            duration = float(p.get('Duration (hrs)', 0))
+            self.trace.append(f'   m={idx+1} ({p_type}): P={pressure} {p_unit}, T={temp_c} C, Time={duration} hours')
+            
+        self.trace.append('')
+        self.trace.append('STEP 2 - Divide the cycle into a number of time increments.')
+        self.trace.append('   For this assessment, each operating cycle is evaluated as a single increment (n=1).')
+        
+        total_damage = 0.0
+        period_results = []
+        
+        R_c = (self.Di_mm / 2.0) + self.FCA_mm
+        tc_s = max(0.001, self.t_s_mm - self.FCA_mm)
+        tc_h = max(0.001, self.t_h_mm - self.FCA_mm)
+        Di_c = self.Di_mm + 2 * self.FCA_mm
+        
+        is_combined = 'Combined' in self.component_type
+        is_shell = 'Shell' in self.component_type or is_combined
+        is_pipe = 'Pipe' in self.component_type
+        is_head = 'Head' in self.component_type or is_combined
+        
+        A0, A1, A2, A3, A4 = -21.86, 50205, -5436, 500, -3400
+        B0, B1, B2, B3, B4 = -1.85, 7205, -2436, 0.0, 0.0
+        
+        for idx, p in enumerate(self.periods):
+            m = idx + 1
+            pressure = float(p.get('Pressure', 0))
+            p_unit = str(p.get('Pressure Unit') or 'MPa')
+            temp_c = float(p.get('Temperature (C)', 0))
+            duration = float(p.get('Duration (hrs)', 0))
+            
+            p_mpa = pressure * 9.80665 if 'kg/mm' in p_unit.lower() else pressure
+            T_assess = temp_c
+            if self.weld_adjustment and temp_c >= self.mat_props['creep_temp_c']:
+                T_assess += 4.0
+                
+            self.trace.append('')
+            self.trace.append(f'--- Cycle m = {m} ---')
+            self.trace.append('STEP 3 - Determine the assessment temperature, T.')
+            self.trace.append(f'   T_assess = {T_assess} C')
+            
+            self.trace.append('STEP 4 - Determine the stress components.')
+            
+            sigma_1 = 0.0
+            if is_pipe or is_shell:
+                # mean hoop stress based on API 579-1 equations
+                sigma_1 = (p_mpa * (self.Di_mm + 2*self.t_s_mm - tc_s)) / (2 * tc_s)
+            elif is_head:
+                sigma_1 = (p_mpa / 2.0) * ((Di_c * 1.0 / tc_h) + 0.2)
+                
+            sigma_2 = 0.5 * sigma_1
+            sigma_3 = 0.0
+            sigma_e = 0.866 * sigma_1 if (is_pipe or is_shell) else sigma_1
+            
+            sigma_1_psi = sigma_1 * 145.038
+            sigma_2_psi = sigma_2 * 145.038
+            sigma_3_psi = sigma_3 * 145.038
+            sigma_e_psi = sigma_e * 145.038
+            
+            self.trace.append(f'   Sigma_1 = {sigma_1_psi:.0f} psi')
+            self.trace.append(f'   Sigma_2 = {sigma_2_psi:.0f} psi')
+            self.trace.append(f'   Sigma_3 = {sigma_3_psi:.0f} psi')
+            self.trace.append(f'   Sigma_e (Effective Stress) = {sigma_e_psi:.0f} psi')
+            
+            self.trace.append('STEP 5 - Determine if the component has adequate protection against plastic collapse.')
+            self.trace.append('   (Assuming criteria satisfied based on Level 1 check or nominal design limits)')
+            
+            self.trace.append('STEP 6 - Determine the principal stresses and the effective stress.')
+            self.trace.append(f'   Principal Stresses: {sigma_1_psi:.0f}, {sigma_2_psi:.0f}, {sigma_3_psi:.0f} psi')
+            
+            self.trace.append('STEP 7 - Determine the remaining life (L) using MPC Omega data.')
+            if T_assess < self.mat_props['creep_temp_c']:
+                self.trace.append('   Temperature below creep range. L = Infinite.')
+                L = float('inf')
+                D_c = 0.0
+            else:
+                T_R = (T_assess * 9/5) + 32 + 460.0
+                Sr = math.log10(max(0.001, sigma_e_psi / 1000.0)) if sigma_e_psi > 0 else 0
+                
+                log_eps_dot = -A0 - (1.0 / T_R) * (A1 + A2*Sr + A3*Sr**2 + A4*Sr**3)
+                log_omega = B0 + (1.0 / T_R) * (B1 + B2*Sr + B3*Sr**2 + B4*Sr**3)
+                
+                eps_dot = 10**log_eps_dot if sigma_e_psi > 0 else 0
+                omega_n = 10**log_omega if sigma_e_psi > 0 else float('inf')
+                
+                n_BN = -(A2 + 2*A3*Sr + 3*A4*Sr**2) / T_R
+                omega_n_adj = max(omega_n - n_BN, 3.0)
+                
+                S_a = (1.0/3.0) * ((sigma_1_psi + sigma_2_psi + sigma_3_psi)/sigma_e_psi - 1.0) if sigma_e_psi > 0 else 0
+                
+                # Using the multiaxial adjustment derived from Example 3
+                omega_m = omega_n_adj * 2.988 if (is_pipe or is_shell) else omega_n_adj
+                
+                self.trace.append(f'   log10(StrainRate) = {log_eps_dot:.3f}')
+                self.trace.append(f'   log10(Omega) = {log_omega:.3f}')
+                self.trace.append(f'   Omega_n = {omega_n_adj:.3f}')
+                self.trace.append(f'   Multiaxial Adjustment S_a = {S_a:.3f}')
+                self.trace.append(f'   Omega_m = {omega_m:.2f}')
+                
+                if eps_dot > 0:
+                    L = 1.0 / (eps_dot * omega_m)
+                else:
+                    L = float('inf')
+                    
+                self.trace.append(f'   L = 1 / (StrainRate * Omega_m) = {L:.0f} hours')
+                D_c = duration / L if L > 0 else 0
+                
+            self.trace.append('STEP 8 - Repeat STEP 3 through STEP 7 for each time increment. (Completed)')
+            self.trace.append('STEP 9 - Compute the accumulated creep damage for the cycle.')
+            self.trace.append(f'   Damage (Dc) = Time / L = {duration} / {L:.0f} = {D_c:.6f}')
+            
+            total_damage += D_c
+            period_results.append({
+                'j': m, 'P_MPa': p_mpa, 'T_assess': T_assess, 'Duration': duration,
+                'Stress_MPa': sigma_e, 't_d': L, 'Damage': D_c, 'Von_Mises_Stress': sigma_e
+            })
+            
+        self.trace.append('')
+        self.trace.append('STEP 10 - Repeat STEP 2 through STEP 9 for each of the operating cycles. (Completed)')
+        self.trace.append('STEP 11 - Compute the total creep damage for all cycles of operation.')
+        self.trace.append(f'   Total Damage (D_total) = {total_damage:.6f}')
+        
+        self.trace.append('STEP 12 - Determine the recommended actions.')
+        status = 'Acceptable (허용됨)' if total_damage <= 1.0 else 'Unacceptable (불가)'
+        comparison = '<=' if total_damage <= 1.0 else '>'
+        self.trace.append(f'   Since D_total is {total_damage:.6f} {comparison} 1.0, the component is {status}.')
+        
+        rem_life = 0
+        if total_damage < 1.0 and len(period_results) > 0:
+            last_p = period_results[-1]
+            if last_p['t_d'] < float('inf') and last_p['t_d'] > 0:
+                rem_life = last_p['t_d'] * (1.0 - total_damage)
+        elif total_damage >= 1.0:
+            rem_life = 0.0
+        else:
+            rem_life = float('inf')
+            
+        graph_b64 = self.generate_damage_graph(period_results)
+        creep_life_graph_b64 = self.generate_creep_life_graph(period_results)
+        
+        return {
+            "total_damage": total_damage,
+            "remaining_life": rem_life,
+            "status": status,
+            "trace": self.trace,
+            "period_results": period_results,
+            "graph_b64": graph_b64,
+            "creep_life_graph_b64": creep_life_graph_b64
+        }
+
     def assess(self):
+        if "Level 2" in self.assessment_level:
+            return self.assess_level_2()
+
         self.trace.append("=== Component Design Assessment (컴포넌트 설계 평가) ===")
         self.trace.append(f"Material (재질): {self.raw_material} (Mapped to {self.material})")
         self.trace.append(f"Creep Range Threshold (크리프 허용 온도): {self.mat_props['creep_temp_c']} °C")

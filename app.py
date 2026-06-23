@@ -25,16 +25,34 @@ default_component = {
     "Future Corrosion Allowance (mm)": 3.0,
     "Weld Joint Efficiency (E)": 1.0,
     "Weld Seam Temp Adjustment": True,
-    "Assessment Level": "Level 1",
+    "Assessment Level": "API 579-1_ASME FFS-1 Level 1",
     "Periods": [
         {"Period Type": "Operational", "Pressure": 0.405, "Pressure Unit": "kg/mm^2", "Temperature (C)": 250.0, "Duration (hrs)": 261840.0},
         {"Period Type": "Operational", "Pressure": 0.0051, "Pressure Unit": "kg/mm^2", "Temperature (C)": 538.0, "Duration (hrs)": 960.0}
     ]
 }
 
+example_3_component = {
+    "Component Name": "Example Problem 3 (Heater Tube)",
+    "Component Type": "Pipe (배관)",
+    "Material": "2.25Cr-1Mo",
+    "Inside Diameter (mm)": 202.7174,
+    "Shell Thickness (mm)": 8.1788,
+    "Head Thickness (mm)": 0.0,
+    "Future Corrosion Allowance (mm)": 2.54,
+    "Weld Joint Efficiency (E)": 1.0,
+    "Weld Seam Temp Adjustment": False,
+    "Assessment Level": "API 579-1_ASME FFS-1 Level 2",
+    "Periods": [
+        {"Period Type": "Operational", "Pressure": 1.4479, "Pressure Unit": "MPa", "Temperature (C)": 601.666, "Duration (hrs)": 131400.0},
+        {"Period Type": "Operational", "Pressure": 1.4479, "Pressure Unit": "MPa", "Temperature (C)": 660.0, "Duration (hrs)": 336.0},
+        {"Period Type": "Operational", "Pressure": 1.4479, "Pressure Unit": "MPa", "Temperature (C)": 601.666, "Duration (hrs)": 43800.0}
+    ]
+}
+
 # --- Session State Initialization ---
 if 'components' not in st.session_state:
-    st.session_state['components'] = [default_component]
+    st.session_state['components'] = [example_3_component]
 
 # --- Sidebar: Project Files ---
 st.sidebar.header("📁 Project Files")

@@ -91,9 +91,9 @@ HTML_TEMPLATE = """
                     <th>Stress Range (MPa)</th>
                     <th>Mean Stress (MPa)</th>
                     <th>Count</th>
-                    <th>Amplitude S<sub>a</sub> (MPa)</th>
+                    <th>Amplitude Sa (MPa)</th>
                     <th>Allowable Cycles N</th>
-                    <th>Fatigue Damage (dD<sub>f</sub>)</th>
+                    <th>Fatigue Damage (dDf)</th>
                 </tr>
             </thead>
             <tbody>
@@ -168,11 +168,11 @@ HTML_TEMPLATE = """
         <div class="section-title">4. Final Assessment Result (최종 평가 결과)</div>
         <div class="result-box">
             {% if "Level 3" in level %}
-            Cumulative Creep Damage / 누적 크리프 손상 (D<sub>c</sub>): {{ "%.6f"|format(Dc) }}<br>
-            Cumulative Fatigue Damage / 누적 피로 손상 (D<sub>f</sub>): {{ "%.6f"|format(Df) }}<br>
+            Cumulative Creep Damage / 누적 크리프 손상 (Dc): {{ "%.6f"|format(Dc) }}<br>
+            Cumulative Fatigue Damage / 누적 피로 손상 (Df): {{ "%.6f"|format(Df) }}<br>
             Total Interaction Damage Ratio / 총 상호작용 손상비: {{ "%.6f"|format(total_damage) }}<br>
             {% else %}
-            Total Creep Damage Fraction / 총 크리프 손상 지수 (D<sub>c</sub>): {{ "%.6f"|format(total_damage) }}<br>
+            Total Creep Damage Fraction / 총 크리프 손상 지수 (Dc): {{ "%.6f"|format(total_damage) }}<br>
             {% endif %}
             Estimated Remaining Life / 예상 잔여 수명: {% if remaining_life == float('inf') %}Infinite (무한){% else %}{{ "%.1f"|format(remaining_life) }}{% endif %} hrs<br><br>
             Assessment Status / 평가 결과: <span class="{% if 'Acceptable' in status %}status-pass{% else %}status-fail{% endif %}">{{ status }}</span>
