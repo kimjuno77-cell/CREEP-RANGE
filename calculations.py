@@ -367,9 +367,31 @@ class CreepAssessment:
                 })
                 continue
 
-            stress_psi = p_psi * (R_in / tc_in + 0.6)
-            self.trace.append(f"   sigma_cm = {p_psi:.1f} * ({R_in:.3f} / {tc_in:.3f} + 0.6)")
-            self.trace.append(f"   Nominal Stress (max) = {stress_psi:.0f} psi = {stress_psi/1000.0:.3f} ksi")
+            von_mises = p.get("Von Mises Stress (MPa)")
+            vm_stress = None
+            if von_mises is not None and str(von_mises).strip() != "" and str(von_mises).lower() != "nan":
+                try:
+                    vm_stress = float(von_mises)
+                except ValueError:
+                    pass
+
+            if vm_stress is not None and vm_stress > 0:
+                stress_psi = vm_stress * 145.038
+                self.trace.append(f"   [Level 2] Using user-defined Von Mises Equivalent Stress: {vm_stress:.4f} MPa")
+                self.trace.append(f"   Converted Stress (max) = {stress_psi:.0f} psi = {stress_psi/1000.0:.3f} ksi")
+            else:
+                stress_psi = p_psi * (R_in / tc_in + 0.6)
+                self.trace.append(f"   sigma_cm = {p_psi:.1f} * ({R_in:.3f} / {tc_in:.3f} + 0.6)")
+                self.trace.append(f"   Nominal Stress (max) = {stress_psi:.0f} psi = {stress_psi/1000.0:.3f} ksi")
+
+            if stress_psi <= 0:
+                self.trace.append("   [Note] Stress is zero or negative (compressive). Compressive stress does not cause tensile creep rupture.")
+                self.trace.append("   Creep damage for this period is set to 0.0.")
+                period_results.append({
+                    'j': j, 'P_MPa': p_mpa, 'T_assess': temp_c, 'Duration': duration,
+                    'Stress_MPa': stress_psi/145.038, 't_d': float('inf'), 'Damage': 0, 'Von_Mises_Stress': vm_stress
+                })
+                continue
 
             self.trace.append("STEP 3 & 4 - Calculate permissible time using MPC Omega Method (Annex F)")
 
@@ -399,7 +421,7 @@ class CreepAssessment:
             stress_mpa = stress_psi / 145.038
             period_results.append({
                 'j': j, 'P_MPa': p_mpa, 'T_assess': temp_c, 'Duration': duration,
-                'Stress_MPa': stress_mpa, 't_d': L, 'Damage': damage, 'Von_Mises_Stress': stress_mpa
+                'Stress_MPa': stress_mpa, 't_d': L, 'Damage': damage, 'Von_Mises_Stress': vm_stress
             })
 
         self.trace.append("-" * 60)
@@ -513,9 +535,31 @@ class CreepAssessment:
                 })
                 continue
                 
-            stress_psi = p_psi * (R_in / tc_in + 0.6)
-            self.trace.append(f"   sigma_cm = {p_psi:.1f} * ({R_in:.3f} / {tc_in:.3f} + 0.6)")
-            self.trace.append(f"   Nominal Stress (max) = {stress_psi:.0f} psi = {stress_psi/1000.0:.3f} ksi")
+            von_mises = p.get("Von Mises Stress (MPa)")
+            vm_stress = None
+            if von_mises is not None and str(von_mises).strip() != "" and str(von_mises).lower() != "nan":
+                try:
+                    vm_stress = float(von_mises)
+                except ValueError:
+                    pass
+
+            if vm_stress is not None and vm_stress > 0:
+                stress_psi = vm_stress * 145.038
+                self.trace.append(f"   [Level 1/App.V] Using user-defined Von Mises Equivalent Stress: {vm_stress:.4f} MPa")
+                self.trace.append(f"   Converted Stress (max) = {stress_psi:.0f} psi = {stress_psi/1000.0:.3f} ksi")
+            else:
+                stress_psi = p_psi * (R_in / tc_in + 0.6)
+                self.trace.append(f"   sigma_cm = {p_psi:.1f} * ({R_in:.3f} / {tc_in:.3f} + 0.6)")
+                self.trace.append(f"   Nominal Stress (max) = {stress_psi:.0f} psi = {stress_psi/1000.0:.3f} ksi")
+
+            if stress_psi <= 0:
+                self.trace.append("   [Note] Stress is zero or negative (compressive). Compressive stress does not cause tensile creep rupture.")
+                self.trace.append("   Creep damage for this period is set to 0.0.")
+                period_results.append({
+                    'j': j, 'P_MPa': p_mpa, 'T_assess': temp_c, 'Duration': duration,
+                    'Stress_MPa': stress_psi/145.038, 't_d': float('inf'), 'Damage': 0, 'Von_Mises_Stress': vm_stress
+                })
+                continue
             
             if is_app_v:
                 self.trace.append("STEP 2 - Calculate Allowable Rupture Life (t_ri) using LMP and Apply B31.3 Appendix V Margin")
@@ -569,7 +613,7 @@ class CreepAssessment:
             
             period_results.append({
                 'j': j, 'P_MPa': p_mpa, 'T_assess': temp_c, 'Duration': duration,
-                'Stress_MPa': stress_mpa, 't_d': L, 'Damage': damage, 'Von_Mises_Stress': stress_mpa
+                'Stress_MPa': stress_mpa, 't_d': L, 'Damage': damage, 'Von_Mises_Stress': vm_stress
             })
             
         self.trace.append("-" * 60)
