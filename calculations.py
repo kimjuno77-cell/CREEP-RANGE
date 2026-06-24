@@ -426,7 +426,7 @@ class CreepAssessment:
     def assess_level_1(self):
         import math
         
-        is_app_v = (self.assessment_level == "ASME B31.3 App. V")
+        is_app_v = (self.assessment_level == "ASME B31.3 App. V" or self.assessment_level == "ASME B31.3 Appendix V")
         if is_app_v:
             self.trace.append("=== ASME B31.3 Appendix V Creep Assessment ===")
         else:
