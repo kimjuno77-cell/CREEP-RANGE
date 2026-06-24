@@ -329,7 +329,10 @@ class CreepAssessment:
         R_in = R_c / 25.4
         tc_in = tc_s / 25.4
 
-        self.trace.append("STEP 1 & 2 - Determine operating conditions and nominal stress for each period.")
+        if is_app_v:
+            self.trace.append("STEP 1 - Determine operating conditions and nominal stress for each period (B31.3 Appendix V)")
+        else:
+            self.trace.append("STEP 1 & 2 - Determine operating conditions and nominal stress for each period.")
         self.trace.append("Calculation Formula for Circumferential Membrane Stress (Cylindrical Shell):")
         self.trace.append("   sigma_cm = P * (R_c / tc + 0.6)")
         self.trace.append(f"   where R_c = {R_in:.3f} in, tc = {tc_in:.3f} in")
@@ -441,9 +444,12 @@ class CreepAssessment:
         C_lmp = self.mat_props['C_lmp']
         margin = 500.0 if is_app_v else 0.0
         
-        self.trace.append(f"LMP Constants (Annex F): A0={A0}, A1={A1}, A2={A2}, A3={A3}, C={C_lmp}")
         if is_app_v:
+            self.trace.append(f"LMP Material Constants: A0={A0}, A1={A1}, A2={A2}, A3={A3}, C={C_lmp}")
             self.trace.append(f"ASME B31.3 App V Margin: -{margin} applied to LMP")
+        else:
+            self.trace.append(f"LMP Constants (Annex F): A0={A0}, A1={A1}, A2={A2}, A3={A3}, C={C_lmp}")
+            
         self.trace.append("")
         
         total_damage = 0.0
@@ -455,7 +461,11 @@ class CreepAssessment:
         R_in = R_c / 25.4
         tc_in = tc_s / 25.4
         
-        self.trace.append("STEP 1 & 2 - Determine operating conditions and nominal stress for each period.")
+        if is_app_v:
+            self.trace.append("STEP 1 - Determine operating conditions and nominal stress for each period (B31.3 Appendix V)")
+        else:
+            self.trace.append("STEP 1 & 2 - Determine operating conditions and nominal stress for each period.")
+            
         self.trace.append("Calculation Formula for Circumferential Membrane Stress (Cylindrical Shell):")
         self.trace.append("   sigma_cm = P * (R_c / tc + 0.6)")
         self.trace.append(f"   where R_c = {R_in:.3f} in, tc = {tc_in:.3f} in")
@@ -498,7 +508,11 @@ class CreepAssessment:
             self.trace.append(f"   sigma_cm = {p_psi:.1f} * ({R_in:.3f} / {tc_in:.3f} + 0.6)")
             self.trace.append(f"   Nominal Stress (max) = {stress_psi:.0f} psi = {stress_psi/1000.0:.3f} ksi")
             
-            self.trace.append("STEP 3 & 4 - Calculate permissible time using LMP Screening Curves (Annex F)")
+            if is_app_v:
+                self.trace.append("STEP 2 - Calculate Allowable Rupture Life (t_ri) using LMP and Apply B31.3 Appendix V Margin")
+            else:
+                self.trace.append("STEP 3 & 4 - Calculate permissible time using LMP Screening Curves (Annex F)")
+                
             logS = math.log10(stress_psi / 1000.0) if stress_psi > 0 else 0
             self.trace.append(f"   log10(S_ksi) = log10({stress_psi/1000.0:.3f}) = {logS:.3f}")
             self.trace.append("   LMP_base = A0 + A1*log10(S) + A2*log10(S)^2 + A3*log10(S)^3")
@@ -514,7 +528,11 @@ class CreepAssessment:
                 self.trace.append(f"   LMP = {LMP_val:.3f}")
             
             log_L = (LMP_val / T_R) - C_lmp
-            self.trace.append(f"   log10(L) = (LMP / T_R) - C = ({LMP_val:.3f} / {T_R:.1f}) - {C_lmp} = {log_L:.3f}")
+            
+            if is_app_v:
+                self.trace.append(f"   log10(t_ri) = (LMP / T_R) - C = ({LMP_val:.3f} / {T_R:.1f}) - {C_lmp} = {log_L:.3f}")
+            else:
+                self.trace.append(f"   log10(L) = (LMP / T_R) - C = ({LMP_val:.3f} / {T_R:.1f}) - {C_lmp} = {log_L:.3f}")
             
             try:
                 L = 10**log_L
@@ -523,10 +541,18 @@ class CreepAssessment:
                 L = float('inf')
                 L_str = "Infinite hours (Exceeds 10^8 hours)"
                 
-            self.trace.append(f"   L = {L_str}")
+            if is_app_v:
+                self.trace.append(f"   t_ri = {L_str}")
+            else:
+                self.trace.append(f"   L = {L_str}")
             
             damage = duration / L if L > 0 else 0
-            self.trace.append(f"   Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
+            
+            if is_app_v:
+                self.trace.append(f"   Life Fraction = t_i / t_ri = {duration} / {L:.0f} = {damage:.6f}")
+            else:
+                self.trace.append(f"   Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
+                
             total_damage += damage
             
             stress_mpa = stress_psi / 145.038
@@ -538,10 +564,15 @@ class CreepAssessment:
             })
             
         self.trace.append("-" * 60)
-        self.trace.append(f"Total Damage (D_total) = sum(Dc) = {total_damage:.6f}")
         
         status = "Acceptable (허용됨)" if total_damage <= 1.0 else "Unacceptable (불가)"
-        self.trace.append(f"Since D_total is {'<=' if total_damage <= 1.0 else '>'} 1.0, the component is {status}.")
+        
+        if is_app_v:
+            self.trace.append(f"Total Life Fraction = sum(t_i / t_ri) = {total_damage:.6f}")
+            self.trace.append(f"Since Total Life Fraction is {'<=' if total_damage <= 1.0 else '>'} 1.0, the operation is {status} per B31.3 App V.")
+        else:
+            self.trace.append(f"Total Damage (D_total) = sum(Dc) = {total_damage:.6f}")
+            self.trace.append(f"Since D_total is {'<=' if total_damage <= 1.0 else '>'} 1.0, the component is {status}.")
         
         graph_b64 = self.generate_lmp_graph()
         creep_life_graph_b64 = self.generate_creep_life_graph(period_results)
