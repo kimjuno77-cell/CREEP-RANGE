@@ -118,6 +118,10 @@ def on_level_change():
         st.session_state['components'][idx] = copy.deepcopy(example_4_component)
         
     st.session_state['components'][idx]["Assessment Level"] = level_val
+    
+    df_key = f"periods_df_{idx}"
+    if df_key in st.session_state:
+        del st.session_state[df_key]
 
 # --- Session State Initialization ---
 if 'components' not in st.session_state:
@@ -136,6 +140,9 @@ if uploaded_json is not None:
             if isinstance(data, list):
                 st.session_state['components'] = data
                 st.session_state['last_uploaded_json_id'] = uploaded_json.file_id
+                for k in list(st.session_state.keys()):
+                    if k.startswith("periods_df_"):
+                        del st.session_state[k]
                 st.sidebar.success("Session loaded successfully!")
         except Exception as e:
             st.sidebar.error("Error loading JSON file.")
@@ -268,19 +275,22 @@ with tab1:
         else:
             with st.expander("🕒 Operating Periods (운전 기간)", expanded=True):
                 st.write("Define the operating conditions over the component's life.")
-                periods_df = pd.DataFrame(active_comp.get("Periods", []))
                 
-                required_cols = ["Period Type", "Pressure", "Pressure Unit", "Temperature (C)", "Duration (hrs)", "Von Mises Stress (MPa)"]
-                for col in required_cols:
-                    if col not in periods_df.columns:
-                        periods_df[col] = np.nan
-                        
+                df_key = f"periods_df_{selected_idx}"
+                if df_key not in st.session_state:
+                    periods_df = pd.DataFrame(active_comp.get("Periods", []))
+                    required_cols = ["Period Type", "Pressure", "Pressure Unit", "Temperature (C)", "Duration (hrs)", "Von Mises Stress (MPa)"]
+                    for col in required_cols:
+                        if col not in periods_df.columns:
+                            periods_df[col] = None
+                    st.session_state[df_key] = periods_df
+                
                 column_order = ["Period Type", "Pressure", "Pressure Unit", "Temperature (C)", "Duration (hrs)"]
                 if "Level 2" in active_comp["Assessment Level"]:
                     column_order.append("Von Mises Stress (MPa)")
                     
                 edited_periods = st.data_editor(
-                    periods_df,
+                    st.session_state[df_key],
                     num_rows="dynamic",
                     width="stretch",
                     column_order=column_order,
@@ -291,7 +301,9 @@ with tab1:
                     },
                     key=f"periods_editor_{selected_idx}"
                 )
-                active_comp["Periods"] = edited_periods.to_dict('records')
+                
+                # Replace NaNs with None for clean JSON serialization
+                active_comp["Periods"] = edited_periods.replace({np.nan: None}).to_dict('records')
             
         st.session_state['components'][selected_idx] = active_comp
 with tab2:
