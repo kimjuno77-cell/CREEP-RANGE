@@ -1,0 +1,1065 @@
+esale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+10.3 Example Problem 3
+A fired crude heater experienced a temperature excursion for a short duration. The refinery needs to know 
+how much additional damage occ니rred to the tubes to understand how the excursion impacts the remaining 
+tube life. This information will be used to help determine if the heater will need to be re-tubed at an upcoming 
+scheduled turn-aro니nd, or if the tubes are likely to last for another run. The tubes have already failed a Level 1 
+assessment (Example Problem 2). Evaluate the remaining life of the tubes, using the Level 2 assessment 
+proced니res, and determine if they are fit for service for another n」n.
+Heater T니be Data
+• Material
+=
+SA-335 Grade P22 Year 1998
+• Typical Conditions (j=1)
+=
+210 psig@1115 °F
+• Outside Diameter
+=
+8.625 in
+• Fabricated Thickness
+=
+0.322 in
+• Future Corrosion Allowance (FCA)
+=
+0.10 in
+• 
+W이d Joint Efficiency
+=
+1.0
+• Unsupported Length
+=
+144 in
+• Cylindrical Shell
+• Past Operating Time (j=1)
+=
+131400 hours
+• Past Operating Time (j=2)
+=
+336 hours
+• Future Expected Time (j=1)
+=
+43800 hours
+Temperature Excursion Data
+• Excursion Pressure:
+=
+210 psig
+• Excursion Temperature:
+=
+1220 °F
+• Excursion Duration:
+-
+336 hours
+Inspection Data
+There are no visual signs of damage to the tube, no bulging, metal loss, or excessive scale was noted. UT 
+thickness readings indicated light general metal loss within the original corrosion allowance. Looking through 
+the inspection records, this is the first operational excursion into the creep range for this component. There 
+are no circumferential weld seams in the fire box.
+Perform a multiple condition Level 2 Assessment for the component in creep service per paragraph 10.4.3
+Each component of the vessel must be analyzed separately. In this example, the tube bends are located 
+o니tside the firebox, so only the cylindrical portion of the tubes will be analyzed. For the purposes of this 
+example, assume the tubes are adeq니ately supported and that circumferential pressure stress is the limiting 
+design condition.
+10-8
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+Level 2 Assessment for the heater tube
+a) 
+STEP 1 - Determine a load history based on past operation and future planned operation. 
+The load history for this example in이udes three operating conditions as listed below:
+Table E10.3-1
+Past (m = 1)
+Exc니rsion (m= 2)
+Future (m = 3)
+Design Press니re (P)
+210 psig
+210 psig
+210 psig
+Design Temperature (T)
+1115T
+1220°F
+1115T
+Service Time (hours)
+131400
+336
+43800
+b) 
+STEP 2 - For the current operating cycle m , determine the total cycle time, m i, and divide the cycle into 
+a number of time increments, nt as shown in Figure 10.27. Define N as the total number of time 
+increments in operating cycle m .
+For this ilkistration, N is set to 2 even tho니gh the condition for each sub-cy이e is the same. In general, 
+N should be set to match any change in pressure, temperature, or tube thickness. Each of the operating 
+cycles in the load history is split into its respective sub-increments below:
+Table E10.3-2
+Operating Cycle
+Past (m = 1)
+Excursion (m = 2)
+Future (m = 3)
+Sub-Increment
+n = 1
+n = 2
+n = 1
+n = 2
+n = 1
+n = 2
+Design Pressure (P)
+210
+210
+210
+210
+210
+210
+Service Time (hours)
+65700
+65700
+168
+168
+21900
+21900
+c) 
+STEP 3 - Determine the assessment temperature, " T, for the time increment nt.
+Table E10.3-3
+Operating Cycle
+Past (m = 1)
+Excursion (m = 2)
+Future (m = 3)
+Sub-Increment
+n = 1
+n = 2
+n= 1
+n = 2
+乃= 1
+n = 2
+Design Pressure (P)
+210
+210
+210
+210
+210
+210
+Service Time (hours)
+65700
+65700
+168
+168
+21900
+21900
+Design Temperature (T)
+1115
+1115
+1220
+1220
+1115
+1115
+10-9
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+d) 
+STEP 4 - Determine the stress components, n 印 , for the time increment nt.
+First, the tube dimensions are checked to ins니re the tubes are considered to be thin-walled per the 
+definition given in paragraph 10.5.2.5.
+쓰 >6
+nom
+8.625 스
+0.322
+2 
+6.8 >6
+Since the thin-walled criterion is met, the mean diameter stress equations per Table 10.2 are applicable. 
+For this example a f니lly-corroded thickness is used for simplicity. A more realistic approach is to calculate 
+the stress as a function of the thickness according to the past and predicted corrosion rates. An example 
+of this calculation is worked out below for the first sub-increment of the first operating cycle. The 
+subsequent increments are calculated similarly.
+" a, = a =---------------
+1 
+mean 0/•/ 
+\
+v corr )
+匕 _P(OD — tm,m+FCA)
+1 
+2((10m— FG4)
+i 210(8.625-0.322 + 0.1)
+세 =1 
+2(0.322-0.1)
+'cTj = 3974 psi
+"아 =0.5(X_)
+'cr2 = 0.5('crj
+‘<T2 =0.5(3974)
+'cr2 = 1987 psi
+" a3 = 0.0 psi
+x = 0.866(” a_)
+'<Te =0.866('crj
+'<7t, =0.866(3974)
+1 
+= 3442 psi
+10-10
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+Each of the stress components are included in the table shown below:
+Table E10.3-4
+Operating Cycle
+Past (m = 1)
+Excursion (m = 2)
+Future (m = 3)
+Sub-Increment
+n = 1
+n =2
+n = 1
+n =2
+n = 1
+n =2
+Design Pressure (P)
+210
+210
+210
+210
+210
+210
+Service Time (hours)
+65700
+65700
+168
+168
+21900
+21900
+Design Temperature (T)
+1115
+1115
+1220
+1220
+1115
+1115
+"흐 = 七 1 (Psi)
+3974
+3974
+3974
+3974
+3974
+3974
+"CTyy = 七2 (Psi)
+1987
+1987
+1987
+1987
+1987
+1987
+七zz = 七3 (PSI)
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+^xy (PSI)
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+七e (Psi)
+3442
+3442
+3442
+3442
+3442
+3442
+e) 
+STEP 5 - Determine if the component has adequate protection against plastic collapse.
+Since the primary load reference stress, na^f, is less than 75% of the minimum yield strength, the plastic 
+collapse criteria are satisfied. The stress in the component is constant in this example, therefore the 
+results below are valid for all operating cycles and sub-increments.
+„, _"^+("』f+9("or
+이 _ 
+3
+0 +(02+9(39742'lV5
+n(기ef = 3974 psi
+av, (1115)= 19851 psi
+⑦쓰 (1220)= 15034 psi
+< min[0.75(<rv.s (1115)),0.75(刀 (1220))]
+n^.ef < min[0.75(19851),0.75(15034)]
+3974 psi < 11276 psi
+f) 
+STEP 6 - Determine the principal stresses, ncr2 / cr3 and the effective stress, "cr,.
+Thin-walled tubes experience a bi-axial stress state and the shear stress is zero; therefore, the principal 
+stresses are given by the stress components c기c니ated in STEP 4 (naxx = "(刀, "cryy = ncr2, nazz = "끼). 
+The table given at the end of STEP 4 in이니des the principal stresses.
+g) 
+STEP 7 - Determine the remaining life at the stress level n ae and temperature nT for time increment nt 
+by 니tilting creep rupture data for the material and designate this value as "Z. All stresses are in ksi and 
+all temperatures are in °F, the corresponding time to njpture is in hours.
+10-11
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+Material constants for the Omega method creep remaining life calculation, see Annex F, Table F.30 for 
+2.25Cr-1Mo annealed.
+八 = —21.86
+4 = 50205
+A2 = —5436
+4 =500
+4 = -3400
+= —1.85 
+日 
+= 7205 
+B2 = -2436 
+B3 = 0.0 
+B4 = 0.0
+For a cylinder or cone = 2 . The MPC Project Omega parameter is defined as /7① =]•. An example 
+calculation for the remaining life at the stress level nae and temperature nT for time increment nt is 
+shown below. For this example, the adjustment factors for creep ductility Ag and creep strain are 
+set to 0.0
+品 =10glo（"이
+5/=logl0（3.442）
+=0.5368
+1Ogl0 6。= — 서 + ） + 46g + nT [4 + A2sl + 4*Sf + A4Sl ]I
+10gH, 
+21.86 + 0.0）+
+1
+460 + 1115
+I [50205 + -5436（0.5368）+ 500（0.5368）2 + -3400（0.5368
+log1n e = -7.921
+©10 co
+8 =1.199x10* \lHr
+co
+log10n =（50+乂）+ 心퍼 \_Bl+B2Sl+B3S}+B4S^
+10glp = 
+85 + 0.0）+
+1
+460 + 1115
+7205 + -2436（0.537）+ 0.0（0.537）2+0.0（0.537）3
+log10 Q = 1.894
+Q = 78.406
+10-12
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+nBN
+우 1
+1g [-5436 + 2(500)(0.537) + 3(-3400)(0.537
+= =4.977
+= max [(Q - nBN), 3.0]
+= max[(78.406-4.977), 3.0]
+= 73.429
+A — । n _ । n _
+<7| + <丁2 + 흐｝
+"흐
+-1.0
+7
+e lf3974 + 1987 + 0.0
+우J
+3442
+-1.0
+5a = 0.244
+① m = 
+十 an ' nBN
+= 乃*※24*1 十2(4.977)
+包 =219.43
+lL =
+1.199x10 8(219.43)
+5a= Pa
+6co ① m
+1
+L = 380090 hours
+The remaining life for each other increment is calculated similarly.
+10-13
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+h) 
+STEP 8 - Repeat STEP 3 through STEP 7 for each time increment nt in the mth operating cycle to 
+determine the rupture time, nL, for each increment.
+The results for each time period are included in the table below.
+Table E10.3-5
+Operating Cycle
+Past (m = 1)
+Excursion (m = 2)
+Future (m = 3)
+S 니 b-lncrement
+n = 1
+n = 2
+n = 1
+n = 2
+n = 1
+n = 2
+Design Pressure (P)
+210
+210
+210
+210
+210
+210
+Service Time (hours)
+65700
+65700
+168
+168
+21900
+21900
+Design Temperature (T)
+1115
+1115
+1220
+1220
+1115
+1115
+七XX = "어 (psi)
+3974
+3974
+3974
+3974
+3974
+3974
+七yy = 七2 (psi)
+1987
+1987
+1987
+1987
+1987
+1987
+七zz = 七3 (Psi)
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+^xy (PSI)
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+noe (psi)
+3442
+3442
+3442
+3442
+3442
+3442
+Remaining Life = nL (hrs)
+380090
+380090
+10330
+10330
+380090
+380090
+i) STEP 9 - Compute the accumulated creep damage for all points in the mth cycle using Equation (10.25).
+mD =
+C
+及 =
+N n.
+/?=1 丄
+2
+nL
+乃 =
+幻 65700 
+65700 …，으
++ ~― —------------- 1--------------— 0.346
+2Z 380090 380090
+j) STEP 10 - Repeat STEP 2 through STEP 9 for each of the operating cycles defined in STEP 1. 
+The results for each operating cycle are included in the table below.
+Table E10.3-6
+Operating Cycle
+Past (m = 1)
+Excursion (m = 2)
+Future (m = 3)
+Sub-Increment
+n = 1
+n = 2
+n = 1
+n = 2
+n = 1
+n = 2
+Design Pressure (P)
+210
+210
+210
+210
+210
+210
+Service Time (hours)
+65700
+65700
+168
+168
+21900
+21900
+Design Temperature (T)
+1115
+1115
+1220
+1220
+1115
+1115
+nCTxx = "허 (psi)
+3974
+3974
+3974
+3974
+3974
+3974
+七vv = 七2 (psi)
+1987
+1987
+1987
+1987
+1987
+1987
+七zz = 七3 (PSi)
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+nTxv (psi)
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+"Oe (PSi)
+3442
+3442
+3442
+3442
+3442
+3442
+Remaining Life = nL (hrs)
+380090
+380090
+10330
+10330
+380090
+380090
+Damage = mDc
+0.346
+0.033
+0.115
+10-i4
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+k) 
+STEP 11 - Compute the total creep damage for all cycles of operation.
+[)l()lal
+丄"c
+M
+玄D"11m' 
+c c
+m—l
+rytolal 
+丄_Zt?
+3
+E
+m [)스 j~)시 low 
+c c
+m-1
+D‘otal = 'Z)c + 2DC + 3D. < Z)；"on = 0.346 + 0.033 + 0.115<0.80
+T1 = 0.494 < 0.80
+I) 
+STEP 12 - The creep damage prediction is complete for this location in the component. F이ow the 
+req니irements of Part 10 to determine the recommended actions.
+For this example, since the total damage, D^tal = 0.494, is less than the allowable damage, D(//ow = 0.80, 
+the component is acceptable for contin니ed operation, including a future run of five years (operating 
+condition m = 3). The remaining life for operation could be determined by repeating this exercise and 
+determining the time when D：1tal = ⑦"™’.
+Larson Miller Parameter Approach
+g) Alternative STEP 7 - Determine the remaining life at the stress level using the Larson-Miller parameter 
+data per Annex F, Ta이e F.31. For SA335Grade P22 materi기 (2.25 Cr-1Mo)
+Table E10.3-7
+Parameters
+Minimum Larson-Miller 
+Parameter - LMPm
+Average Larson-Miller 
+Parameter - LMPa
+4)
+4.3981719E+01
+4.3494159E+01
+4
+-8.4656117E-01
+-6.0165638E-01
+A
+-4.0483005E+01
+-2.8040471 E+01
+八
+2.6236081 E-01
+2.0644229E-01
+A
+1.5373650E+01
+1.0982290E+01
+4
+4.9673781 E-02
+2.8393767E-02
+4
+6.6049429E-01
+3.6067024E-01
+(스LMP
+20.0
+20.0
+Where Larson-Miller parameter is given by cr in ksi
+WF스
+Ao + A2 而 + A4a + 4/丁1'5
+1 + 丄4j 
+十 八으丁 + 丄이乂#丄어
+Rupture Ufe L is evaluated using Eq니ation (10.21) to (10.24)
+S1° [이’ 
+("T + 460)““ LMP
+10-15
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+Where
+J
+"錦 =" 江 exp 0.24 느-1
+_ V 스'’ z
+J, =" 하 +" a2 +" 色
+o _ (n _2 . « 
+2 .n 2\位5
+우 = ( 어 + ^2 + 色 )
+J, =(3974 + 1987 + 0) = 5961
+Ss = 시39742+19872+02 = 4443
+"豆=34426X_0.2서쁘 —1^ = 3736
+Calculate the rupture life using the minimum Larson-Miller parameter data
+LMPmm =
+1 + 4.+4幻+41V5
+43.981719 + (—40.483005、/3.736) + (15.37365.3.736) + (0.66049429.3.73615)
+1 + (-0.84656117V3.736) + (0.26236081 -3.736) + (0.049673781 • 3.73615)
+= 39.765
+1=0 刀 =
+1쁘◎-에=느쁪쯦-빠—
+1£ = 1052476 =176,850 hours
+저 / = 65,700 hours
+Life Fraction used for first sub-increment = --------------  = 0.3715
+(176,850 J
+Similarly it can be shown that for the other 5 sub-increments, the life fractions are: 0.3715, 0.0359, 0.0359, 
+0.1238, 0.1238, therefore
+=[0.3715 + 0.3715 + 0.0359 + 0.0359 + 0.1238 + 0.1238] = 1.06>0.80
+Therefore, the component is not acceptable per Level 2 analysis using the minimum Larson-Miller 
+parameter data
+10-16
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+Calculate the rupture life using the average Larson-Miller parameter data.
+_ 凡 + 刀2、/呂＜ + 刀4日＜ +
+1+서 
++之3日＜ + 4日＜#| '5
+43.494159 + (―28.040471、/3.736) + (10.982229 • 3.736) + (0.36067024 • 3.73615) 
+— 
+1 + (-0.60165638V3.736) + (0.20644229 • 3.736) + (0.028393767-3.7361'5)
+= 40.485
+l=oL =
+1000.싸11m 
+(刀 + 460)
+1000-40.485 2Q 
+(1115 + 460) —
+= 5.70476
+\L = 105 7048 = 506,710 hours
+= 65,700 hours
+Life Fraction used for first sub-increment
+f 65700 스
+(506,710 J
+= 0.1297
+Similarly it can be shown that for the other 5 sub-increments, the life fractions are: 0.1297, 0.0134, 0.0134, 
+0.0432, 0.0432, therefore
+=[0.1297+ 0.1297+ 0.0134 + 0.0134 + 0.0432 +0.0432] = 0.373 ＜0.80
+Therefore, the component is acceptable per Level 2 analysis using the average Larson-Miller 
+parameter data
+Comparison with API 530 Method
+If the same data were to be analyzed using the API 530 method, the Huddleston uniaxial stress 
+Seff =3.736 ksi is replaced by the mean diameter hoop stress cmean =3.974 ksi in Equation 10.21. Since 
+5^ is 0.94 times cmean, the corresponding life fractions consumed using API 530 become higher.
+a) 
+Using minimum LMP data:
+Life fractions consumed are: 0.5068, 0.5068, 0.0481,0.0481, 0.1689, 0.1689. Total life fraction D：1al =1.448 
+compared with Dtotal = 1.063 using S and/)'"" = 0.494 using Omega data with both adjustment factors 
+for creep strain and creep ductility set to zero.
+b) 
+Using average LMP data:
+Ufe fractions consumed are: 0.1685, 0.1685, 0.0171, 0.0171, 0.0562, 0.0562. Total life fraction 
+Df1al =0.484 compared with D?1al =0.373 using S ff and 
+日 =0.494 using Omega data with both 
+adjustment factors for creep strain and creep ductility set to zero.
+：c) Analysis using Actual Corroded Tube Wall Thickness
+Assuming accurate and reliable historical tube wall corrosion rates are available, act니al kibe wall thickness 
+：can be used to obtain a more accurate estimate of rupt니re life and life fraction.
+For this example, assuming the tubes were corroding at 0.005 inch per year from the inside surface, the load 
+：history corresponding to the tube dimension during each of the operating cycles and sub-increments can be 
+^derived. Rupture life and damage res니Its based on various methods are summarized in Table E10.3-8. Note 
+that with this approach, all cumulative damages are below 0.80.
+10-17
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Exam이e Problem Manual
+Table E10.3-8
+Operating Cycle
+Past (m = 1)
+Excursion (m = 2)
+Future (m = 3)
+Sub-Increment
+n = 1
+n = 2
+n = 1 
+n = 2
+n = 1
+n = 2
+Service Time in Ho니rs
+L_hours
+65,700
+65,700
+168
+168
+21,900
+21,900
+Operating Pressure, psig
+P avg
+210
+210
+210
+210
+210
+210
+Tube Wall Temperature, 0 F
+T avg
+1115
+1115
+1220
+1220
+1115
+1115
+ID Corrosion Rate, 0.001 
+inch / year
+5.0
+5.0
+5.0
+5.0
+5.0
+5.0
+Beginning Tube OD, inch
+Do_begin
+8.625
+8.625
+8.625
+8.625
+8.625
+8.625
+Ending Tube OD, inch
+Do end
+8.625
+8.625
+8.625
+8.625
+8.625
+8.625
+Beginning Tube ID, inch
+Di begin
+7.981
+8.056
+8.131
+8.131
+8.131
+8.156
+Ending Tube ID, inch
+Di end
+8.056
+8.131
+8.131
+8.131
+8.156
+8.181
+Beginning Tube Thickness, 
+inch
+t_begin
+0.322
+0.285
+0.247
+0.247
+0.247
+0.234
+Ending Tube Thickness, inch
+t end
+0.285
+0.247
+0.247
+0.247
+0.234
+0.222
+Average Outside Diameter, 
+inch
+Do_avg
+8.625
+8.625
+8.625
+8.625
+8.625
+8.625
+Average Inside Diameter, 
+inch
+Di_avg
+8.019
+8.094
+8.131
+8.131
+8.144
+8.169
+Average Tube Wall, inch
+t_avg
+0.303
+0.266
+0.247
+0.247
+0.241
+0.228
+Omega Method
+Principal Stress 1, psi
+cd
+2881
+3303
+3562
+3564
+3660
+3866
+Principal Stress 2, psi
+02
+1441
+1651
+1781
+1782
+1830
+1933
+Principal Stress 3, psi
+a3
+0
+0
+0
+0
+0
+0
+Effective Stress, psi
+oe
+2495
+2860
+3085
+3086
+3169
+3348
+Q Rupture Life, hrs
+LQ
+879,235
+633,665
+13,839
+13,825
+482,208
+412,347
+O Life Used (This Period)
+L/LQ
+0.075
+0.104
+0.012
+0.012
+0.045
+0.053
+Damage (Cum니ative)
+Z (L / LQ )
+0.075
+0.178
+0.191
+0.203
+0.248
+0.301
+LMP Using Huddleston Unaxial Stress 
+Approach
+J1 = (o1 + o2 十 o3)
+J1
+4322
+4954
+5343
+5345
+5490
+5799
+Q - / 스 스」_ 
+么」_ 
+之 \ U.b
+Ss — (다1 +02 + CT3 )
+Ss
+3222
+3693
+3983
+3984
+4092
+4322
+Huddleston Uniaxial Stress
+SEFF
+2709
+3105
+3349
+3350
+3440
+3634
+Minimum LMP at SEFF
+LMP min 
+(SEFF)
+40.721
+40.350
+40.122
+40.120
+40.036
+39.858
+Rupture Life, hours
+LEFF
+715,601
+416,094
+7,620
+7,607
+263,013
+202,581
+Life Used (This Period)
+L/LEFF
+0.092
+0.158
+0.022
+0.022
+0.083
+0.108
+Damage (Cum니ative)
+Z (L / LEFF )
+0.092
+0.250
+0.272
+0.294
+0.377
+0.485
+Average LMP at S5EFF
+LMP avg 
+(SEFF)
+41.263
+40.965
+40.780
+40.779
+40.710
+40.562
+Rupture Life, hours
+LEFF
+1,579,314
+1,022,363
+18,775
+18,748
+703,860
+567,314
+Life Used (This Period)
+L/LEFF
+0.042
+0.064
+0.009
+0.009
+0.031
+0.039
+Damage (Cumulative)
+Z(L / LEFF )
+0.042
+0.106
+0.115
+0.124
+0.155
+0.193
+API STD 530 Approach
+API 530 Mean Diameter 
+Stress, psi
+(Jmean
+2881
+3303
+3562
+3564
+3660
+3866
+API 530 Minimum LMP at 
+O^mean
+LMPmin 
+(dmean)
+40.560
+40.164
+39.924
+39.923
+39.835
+39.649
+Rupture Life, hours
+L530
+565,463
+317,115
+5,810
+5,800
+195,805
+149,182
+Life Used (This Period)
+L / I-530
+0.116
+0.207
+0.029
+0.029
+0.112
+0.147
+Damage (Cumulative)
+Z (L / L530)
+0.116
+0.323
+0.352
+0.381
+0.493
+0.640
+API 530 Average LMP at 
+(Jmean
+LMPavg 
+(하lean)
+41.134
+40.814
+40.617
+40.616
+40.543
+40.387
+Rupture Life, hours
+L53O
+1,308,211
+820,247
+15,023
+15,000
+551,484
+439,088
+Life Used (This Period)
+L / 1-530
+0

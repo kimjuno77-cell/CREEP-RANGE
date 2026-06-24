@@ -414,7 +414,9 @@ class CreepAssessment:
         rem_life = 0.0
         if total_damage < 1.0 and len(period_results) > 0:
             last_p = period_results[-1]
-            if last_p["t_d"] < float('inf') and last_p["t_d"] > 0:
+            if last_p["t_d"] == float('inf'):
+                rem_life = float('inf')
+            elif last_p["t_d"] > 0:
                 rem_life = last_p["t_d"] * (1.0 - total_damage)
         elif total_damage >= 1.0:
             rem_life = 0.0
@@ -587,7 +589,9 @@ class CreepAssessment:
         rem_life = 0.0
         if total_damage < 1.0 and len(period_results) > 0:
             last_p = period_results[-1]
-            if last_p["t_d"] < float('inf') and last_p["t_d"] > 0:
+            if last_p["t_d"] == float('inf'):
+                rem_life = float('inf')
+            elif last_p["t_d"] > 0:
                 rem_life = last_p["t_d"] * (1.0 - total_damage)
         elif total_damage >= 1.0:
             rem_life = 0.0
@@ -1143,10 +1147,12 @@ class CreepAssessment:
         status = "Acceptable (허용됨)" if total_damage <= D_callow else "Unacceptable (불가)"
         self.trace.append(f"Since D_c is {total_damage:.6f} {'<=' if total_damage <= D_callow else '>'} {D_callow}, the component is {status}.")
         
-        rem_life = 0
+        rem_life = 0.0
         if total_damage < 1.0 and len(period_results) > 0:
             last_p = period_results[-1]
-            if last_p["t_d"] < float('inf') and last_p["t_d"] > 0:
+            if last_p["t_d"] == float('inf'):
+                rem_life = float('inf')
+            elif last_p["t_d"] > 0:
                 rem_life = last_p["t_d"] * (1.0 - total_damage)
         elif total_damage >= 1.0:
             rem_life = 0.0

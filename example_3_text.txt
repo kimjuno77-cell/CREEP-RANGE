@@ -1,0 +1,259 @@
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+PART 10 
+ASSESSMENT OF COMPONENTS OPERATING IN THE CREEP 
+RANGE 
+EXAMPLE PROBLEMS
+10.1 
+Example Problem 1.....................................................................................................10-1
+10.2 
+Example Problem 2..................................................................................................... 10-5
+10.3 
+Example Problem 3..................................................................................................... 10-8
+10.4 
+Example Problem 4................................................................................................... 10-19
+10.1 Example Problem 1
+A liquid knock-out vessel that is part of a pressure relief system typically operates at temperatures below the 
+creep range. During a recent upset condition, high temperature liquid was relieved in the vessel for a period of 
+time, subjecting the vessel to temperatures in the creep range. Details regarding the vessel and the upset 
+condition are given below. The shell contains a weld seam which was exposed to the excursion conditions. 
+The vessel was constructed to the ASME B&PV Code, Section VIII, Division 1. Estimate the level of creep 
+damage s니stained by the vessel shell during the 니pset condition.
+Vessel Data
+• Material 
+=
+SA —516 Grade 60 Year 1998
+• Design Conditions 
+=
+5Qpsig@45Q°F
+• Inside Diameter 
+=
+60 in
+• Fabricated Thickness 
+=
+0.375 in
+• Future Corrosion Allowance (FCA) 
+=
+0.10 in
+• 
+W이d Joint Efficiency 
+=
+1.0
+• Unsupported Length 
+=
+144 in
+• Cylindrical Shell with 2:1 티liptical Heads (Rell = 2)
+• PWHT 
+=
+Yes, Original Fabrication Requirement
+Temperature Excursion Data
+• Excursion Pressure: 
+=
+82.6 psig
+• Excursion Temperature: 
+=
+950 °F
+• Excursion D니ration: 
+=
+20 hours
+Inspection Data
+There are no visual signs of damage to the vessel, no bulging, metal loss, or excessive scale was noted. UT 
+thickness readings indicated light general metal loss within the original corrosion allowance. Looking thro니gh 
+the inspection records, this is the first operational excursion into the creep range for this component.
+10-1
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+Perform a Level 1 Assessment for the component in creep service per paragraph 10.4.2.1
+Each component of the vessel must be analyzed separately. In this example, the cylindrical shell is analyzed 
+first, followed by the elliptical heads. Nozzles and supplemental loadings are ignored for the purposes of this 
+example.
+Level 1 Assessment for the cylindrical shell
+a) 
+STEP 1 - Determine the maximum operating temperature, pressure, and service time the component was 
+exposed to. Since the component contains a weld seam exposed to the excursion conditions, 25°F shall 
+be added to the maximum operating temperature.
+Tmax = 950 + 25 = 975°F
+Pmax = 32.6psig
+time = 20 hours
+b) 
+STEP 2 - Determine the operating stress of the component for the operating condition defined in STEP 1 
+using Annex A. The computed nominal stress shall include the effects of service-induced wall thinning.
+Definition of common variables:
+ID + 2(FCA) 60 + 2(0.1)
+R =------------------- =------------ = 30.1 in
+2 
+2
+tc = 心0m -FCA = 0.375-0.1 = 0.275 in
+Supplemental loadings are not considered in this example.
+Cylindrical shell circumferential membrane stress (A.11)
+p( z? 스 
+erf =— 쯔+ 0.6
+m
+하
+引'』c 
+y
+82.6 f 30.1 그 ,
+------  ----------+ 0.6
+1.0(0.275
+cr： = 9091 psi
+Cylindrical shell longitudinal membrane stress (A. 17)
+£ 
+82.6 f 30.1 세
+<7 =—;-------- -----------------
+2(1.0)(0.275
+crj =4,504 psi
+⑦max = max (히,(나；)
+^max = max(9091,4504)
+°max =9091 psi
+10-2
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+c) 
+STEP 3 - Determine the material of construction for the component and find the figure with the screening 
+and damage c니rves to be used for the Level 1 assessment from Fig니res 10.3 through 10.25.
+The cylindrical shell is constructed of SA-516 Grade 60, carbon steel; therefore, Figure 10.3 shall be used 
+for the analysis.
+d) 
+STEP 4 - Determine the maximum permissible time for operation based on the screening curve obtained 
+from STEP 3, the nominal stress from STEP 2, and the assessment temperature from STEP 1. If the time 
+determined from the screening c니rve exceeds the service time for the component from STEP 1, then the 
+component is acceptable per the Level 1 Assessment procedure.
+From Figure 10.3, the acceptable creep life of the cylindrical shell at 10 ksi and 975T is over 25 hours. 
+Since the component was only exposed to these conditions for 20 hours, and has no history of prior 
+temperature excursions on record, the component is fit for service without further evaluation. However, it 
+is important to note the temperature exc니rsion in the vessel’s files so that f니ture analyses can acc니rately 
+take into account all past temperature excursions.
+Level 1 Assessment for the 2:1 elliptical heads
+a)
+b)
+c)
+d)
+STEP 1 - Determine the maximum operating temperature, pressure, and service time the component was 
+exposed to. Since the component contains a weld seam exposed to the excursion conditions, 25°F shall 
+be added to the maximum operating temperature.
+Tmax = 950 + 25 = 975°F
+Pmax = 82.6 psig 
+time = 20 hours
+STEP 2 - Determine the operating stress of the component for the operating condition defined in STEP 1 
+using Annex A. The computed nominal stress shall incl니de the effects of service-induced wall thinning. 
+Definition of common variables:
+£> = /D + 2(FC4)-60 + 2(0.1) = 60.2 in
+= 1110m - FCA = 0.375 — 0.1 = 0.275 in
+Elliptical head membrane stress (A.33 and A.32)
+及 =|(2.0 + O) 
+及 =|(2.0 + 2.02) 
+及 = 1.0
+/
+~ 2（£）
+DK 수、 
+—— + 0.2
+4
+7
+82.6 f60.2(1.0) 
+스
+———- ————^ + 0.2 =9049 psi
+2(1.0)( 0.275 
+J
+STEP 3 - Determine the material of construction for the component and find the fig니re with the screening 
+and damage curves to be used for the Level 1 assessment from Figures 10.3 through 10.25.
+The heads are constructed of SA-516 Grade 60, carbon steel; therefore, Figure 10.3 shall be used for the 
+analysis.
+STEP 4 - Determine the maximum permissible time for operation based on the screening curve obtained 
+from STEP 3, the nominal stress from STEP 2, and the assessment temperature from STEP 1. If the time 
+determined from the screening c니rve exceeds the service time for the component from STEP 1, then the 
+component is acceptable per the Level 1 Assessment procedure.
+10-3
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+From Figure 10_3, the acceptable creep life of the cylindrical shell at 10 ksi and 975°F is over 25 
+hours. Since the component was only exposed to these conditions for 20 hours, and has no 
+history of prior temperature excursions on record, the component is fit for service without further 
+evaluation. However, it is important to note the temperature excursion in the vessel’s files so that 
+future analyses can accurately take into account all past temperature excursions.
+10-4
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+10.2 Example Problem 2
+A fired crude heater experienced a temperature excursion for a short duration. The refinery needs to know 
+how much additional damage occ니rred to the tubes to understand how the excursion impacts the remaining 
+tube life. This information will be used to help determine if the heater will need to be re-tubed at an upcoming 
+scheduled t니rn-around, or if the tubes are likely to last for another run. Evaluate the tube remaining life (typical 
+past history plus known temperature excursion) and determine if they are fit for service for another nun.
+Heater Tube Data
+• Material
+=
+1s/4 —335 Grade P22 Year 1998
+• Typical Conditions (j=1)
+=
+210 ^@1115 °F
+• Outside Diameter
+=
+8.625 in
+• Fabricated Thickness
+=
+0.322 in
+• Future Corrosion Allowance (FCA)
+=
+0.10 in
+• Weld Joint Efficiency
+=
+1.0
+• Unsupported Length
+=
+144 in
+• Cylindrical Shell
+• Past Operating Time (j=1)
+=
+131400 hours
+• Past Operating Time (j=2)
+=
+336 hours
+• Future Expected Time (j=1)
+=
+43800 hours
+Temperature Excursion Data
+• Excursion Pressure:
+=
+210 psig
+• Excursion Temperature:
+=
+1220 °F
+• Excursion Duration:
+-
+336 hours
+Inspection Data
+There are no visual signs of damage to the kibe, no bulging, metal loss, or excessive scale was noted. UT 
+thickness readings indicated light general metal loss within the original corrosion allowance. Looking thro니gh 
+the inspection records, this is the first operational excursion into the creep range for this component. There 
+are no weld seems in the fire box.
+Perform a multiple condition Level 1 Assessment for the component in creep service per paragraph 10.4.2.2
+Each component of the vessel must be analyzed separately. In this example, the tube bends are located 
+outside the firebox, so only the cylindrical portion of the tubes will be analyzed. For the purposes of this 
+example, assume the tubes are adequately supported and that circumferential pressure stress is the limiting 
+design condition.
+10-5
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+Level 1 Assessment for the heater tube
+a) 
+STEP 1 - Determine the maximum operating temperature, press니re, and service time the component was 
+expose

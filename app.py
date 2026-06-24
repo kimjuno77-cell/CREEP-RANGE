@@ -288,7 +288,8 @@ with tab1:
                         "Period Type": st.column_config.SelectboxColumn("Period Type (운전 유형)", options=["Operational", "Maintenance"], default="Operational"),
                         "Pressure Unit": st.column_config.SelectboxColumn("Pressure Unit", options=["MPa", "kg/mm^2"]),
                         "Von Mises Stress (MPa)": st.column_config.NumberColumn("Von Mises Stress (MPa) [Optional]", min_value=0.0, step=1.0, help="If provided, overrides calculated nominal stress for Level 2.")
-                    }
+                    },
+                    key=f"periods_editor_{selected_idx}"
                 )
                 active_comp["Periods"] = edited_periods.to_dict('records')
             

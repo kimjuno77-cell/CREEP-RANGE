@@ -1,0 +1,188 @@
+esale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+10.3 Example Problem 3
+A fired crude heater experienced a temperature excursion for a short duration. The refinery needs to know 
+how much additional damage occ니rred to the tubes to understand how the excursion impacts the remaining 
+tube life. This information will be used to help determine if the heater will need to be re-tubed at an upcoming 
+scheduled turn-aro니nd, or if the tubes are likely to last for another run. The tubes have already failed a Level 1 
+assessment (Example Problem 2). Evaluate the remaining life of the tubes, using the Level 2 assessment 
+proced니res, and determine if they are fit for service for another n」n.
+Heater T니be Data
+• Material
+=
+SA-335 Grade P22 Year 1998
+• Typical Conditions (j=1)
+=
+210 psig@1115 °F
+• Outside Diameter
+=
+8.625 in
+• Fabricated Thickness
+=
+0.322 in
+• Future Corrosion Allowance (FCA)
+=
+0.10 in
+• 
+W이d Joint Efficiency
+=
+1.0
+• Unsupported Length
+=
+144 in
+• Cylindrical Shell
+• Past Operating Time (j=1)
+=
+131400 hours
+• Past Operating Time (j=2)
+=
+336 hours
+• Future Expected Time (j=1)
+=
+43800 hours
+Temperature Excursion Data
+• Excursion Pressure:
+=
+210 psig
+• Excursion Temperature:
+=
+1220 °F
+• Excursion Duration:
+-
+336 hours
+Inspection Data
+There are no visual signs of damage to the tube, no bulging, metal loss, or excessive scale was noted. UT 
+thickness readings indicated light general metal loss within the original corrosion allowance. Looking through 
+the inspection records, this is the first operational excursion into the creep range for this component. There 
+are no circumferential weld seams in the fire box.
+Perform a multiple condition Level 2 Assessment for the component in creep service per paragraph 10.4.3
+Each component of the vessel must be analyzed separately. In this example, the tube bends are located 
+o니tside the firebox, so only the cylindrical portion of the tubes will be analyzed. For the purposes of this 
+example, assume the tubes are adeq니ately supported and that circumferential pressure stress is the limiting 
+design condition.
+10-8
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+Level 2 Assessment for the heater tube
+a) 
+STEP 1 - Determine a load history based on past operation and future planned operation. 
+The load history for this example in이udes three operating conditions as listed below:
+Table E10.3-1
+Past (m = 1)
+Exc니rsion (m= 2)
+Future (m = 3)
+Design Press니re (P)
+210 psig
+210 psig
+210 psig
+Design Temperature (T)
+1115T
+1220°F
+1115T
+Service Time (hours)
+131400
+336
+43800
+b) 
+STEP 2 - For the current operating cycle m , determine the total cycle time, m i, and divide the cycle into 
+a number of time increments, nt as shown in Figure 10.27. Define N as the total number of time 
+increments in operating cycle m .
+For this ilkistration, N is set to 2 even tho니gh the condition for each sub-cy이e is the same. In general, 
+N should be set to match any change in pressure, temperature, or tube thickness. Each of the operating 
+cycles in the load history is split into its respective sub-increments below:
+Table E10.3-2
+Operating Cycle
+Past (m = 1)
+Excursion (m = 2)
+Future (m = 3)
+Sub-Increment
+n = 1
+n = 2
+n = 1
+n = 2
+n = 1
+n = 2
+Design Pressure (P)
+210
+210
+210
+210
+210
+210
+Service Time (hours)
+65700
+65700
+168
+168
+21900
+21900
+c) 
+STEP 3 - Determine the assessment temperature, " T, for the time increment nt.
+Table E10.3-3
+Operating Cycle
+Past (m = 1)
+Excursion (m = 2)
+Future (m = 3)
+Sub-Increment
+n = 1
+n = 2
+n= 1
+n = 2
+乃= 1
+n = 2
+Design Pressure (P)
+210
+210
+210
+210
+210
+210
+Service Time (hours)
+65700
+65700
+168
+168
+21900
+21900
+Design Temperature (T)
+1115
+1115
+1220
+1220
+1115
+1115
+10-9
+Copyright American Petroleum Institute
+Provided by IHS under license with API
+No reproduction or networking permitted without license from IHS
+Licensee=GS Engineering & Construction Co/5948933001
+Not for Resale, 02/05/2017 17:38:19 MST
+API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+d) 
+STEP 4 - Determine the stress components, n 印 , for the time increment nt.
+First, the tube dimensions are checked to ins니re the tubes are considered to be thin-walled per the 
+definition given in paragraph 10.5.2.5.
+쓰 >6
+nom
+8.625 스
+0.322
+2 
+6.8 >6
+Since the thin-walled criterion is met, the mean diameter stress equations per Table 10.2 are applicable. 
+For this example a f니lly-corroded thickness is used for simplicity. A more realistic approach is to calculate 
+the stress as a function of the thickness according to the past and predicted corrosion rates. An example 
+of this calculation is worked out below for the first sub-increment of the first operating cycle. The 
+subsequent increments are calculated similarly.
+" a, = a =---------------
+1 
+mean 0/•/ 
+\
+v corr )
+匕 _P(OD — tm,m+FCA)
+1 
+2((10m— FG4)
+i 210(8.625-0.322 + 

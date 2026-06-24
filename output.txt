@@ -1,0 +1,74 @@
+0: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+5: 10.1
+6: Example Problem 1.....................................................................................................10-1
+7: 10.2
+8: Example Problem 2..................................................................................................... 10-5
+10: Example Problem 3..................................................................................................... 10-8
+11: 10.4
+12: Example Problem 4................................................................................................... 10-19
+13: 10.1 Example Problem 1
+67: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+68: Perform a Level 1 Assessment for the component in creep service per paragraph 10.4.2.1
+116: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+119: and damage c니rves to be used for the Level 1 assessment from Fig니res 10.3 through 10.25.
+164: and damage curves to be used for the Level 1 assessment from Figures 10.3 through 10.25.
+177: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+189: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+190: 10.2 Example Problem 2
+243: Perform a multiple condition Level 1 Assessment for the component in creep service per paragraph 10.4.2.2
+254: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+299: c니rves to be used for the Level 1 assessment from Figures 10.3 through 10.25.
+308: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+345: acceptable and the requirements of paragraph 10.4.2.3 shall be followed.
+351: This same problem is examined further with a Level 2 assessment in Example Problem 3.
+358: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+359: 10.3 Example Problem 3
+364: assessment (Example Problem 2). Evaluate the remaining life of the tubes, using the Level 2 assessment
+414: Perform a multiple condition Level 2 Assessment for the component in creep service per paragraph 10.4.3
+425: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+448: a number of time increments, nt as shown in Figure 10.27. Define N as the total number of time
+520: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+531: Since the thin-walled criterion is met, the mean diameter stress equations per Table 10.2 are applicable.
+564: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+664: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+709: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+744: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+824: i) STEP 9 - Compute the accumulated creep damage for all points in the mth cycle using Equation (10.25).
+924: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+987: Rupture Ufe L is evaluated using Eq니ation (10.21) to (10.24)
+996: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1031: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1059: Seff =3.736 ksi is replaced by the mean diameter hoop stress cmean =3.974 ksi in Equation 10.21. Since
+1442: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1443: 10.4 Example Problem 4
+1519: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1569: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1577: Table 10.2.
+1626: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1636: 『10.250 + 5.125 + 0 ，丁 厂、… 1k
+1669: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1727: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1767: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1775: 『10.250 + 5.125 + 0
+1816: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1866: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1916: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+1951: K] = 分(시흥 = 0 -2121)(10.250 M jC =11.7855 ksi』그
+1953: K] = 分사흐 = (0.4152)(10.250 忍己서예셰 = 4.0372 ksiJGi
+1977: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+2009: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+2071: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+2097: . No difference will be made between them in Table E10.4-5
+2135: The detailed results obtained with Microsoft Excel are given in Tables E10.4-1 to E10.4-5.
+2147: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+2150: Tables E10.4-1 to E10.4-5 show that the propagation of the crack due to creep is very slow.
+2199: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+2200: Table E10.4-1 - Creep Crack Growth - Times, Dimensions and Reference Stress Parameters
+2700: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+2701: Table E10.4-2 - Creep Crack Growth - Failure Assessment Parameters of the Crack
+3158: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+3159: Table E10.4-3 - Creep Crack Growth - Damage and Stain Rate Parameters
+3571: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+3572: Table E10.4-4 - Creep Crack Growth - Crack Growth Rate Parameters
+3986: API 579-2/ASME FFS-2 2009 Fitness-For-Service Example Problem Manual
+3987: Table E10.4-5 - Creep Crack Growth - Crack Growth Parameters and Propagation
