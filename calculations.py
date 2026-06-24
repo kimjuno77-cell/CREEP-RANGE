@@ -329,10 +329,7 @@ class CreepAssessment:
         R_in = R_c / 25.4
         tc_in = tc_s / 25.4
 
-        if is_app_v:
-            self.trace.append("STEP 1 - Determine operating conditions and nominal stress for each period (B31.3 Appendix V)")
-        else:
-            self.trace.append("STEP 1 & 2 - Determine operating conditions and nominal stress for each period.")
+        self.trace.append("STEP 1 & 2 - Determine operating conditions and nominal stress for each period.")
         self.trace.append("Calculation Formula for Circumferential Membrane Stress (Cylindrical Shell):")
         self.trace.append("   sigma_cm = P * (R_c / tc + 0.6)")
         self.trace.append(f"   where R_c = {R_in:.3f} in, tc = {tc_in:.3f} in")
