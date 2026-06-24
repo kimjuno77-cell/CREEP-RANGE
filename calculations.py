@@ -421,61 +421,71 @@ class CreepAssessment:
             "creep_life_graph_b64": creep_life_graph_b64
         }
     def assess_level_1(self):
-        self.trace.append("=== Level 1 Creep Assessment (API 579-1/ASME FFS-1) ===")
+        import math
+        
+        is_app_v = (self.assessment_level == "ASME B31.3 App. V")
+        if is_app_v:
+            self.trace.append("=== ASME B31.3 Appendix V Creep Assessment ===")
+        else:
+            self.trace.append("=== Level 1 Creep Assessment (API 579-1/ASME FFS-1) ===")
+            
         self.trace.append(f"Material (재질): {self.raw_material}")
-
+        
         T_c = self.mat_props['creep_temp_c']
         self.trace.append(f"Material Creep Threshold Temperature: T_c = {T_c:.1f} °C")
-
+        
         A0 = self.mat_props['A0']
         A1 = self.mat_props['A1']
         A2 = self.mat_props.get('A2', 0.0)
         A3 = self.mat_props.get('A3', 0.0)
         C_lmp = self.mat_props['C_lmp']
-
+        margin = 500.0 if is_app_v else 0.0
+        
         self.trace.append(f"LMP Constants (Annex F): A0={A0}, A1={A1}, A2={A2}, A3={A3}, C={C_lmp}")
+        if is_app_v:
+            self.trace.append(f"ASME B31.3 App V Margin: -{margin} applied to LMP")
         self.trace.append("")
-
+        
         total_damage = 0.0
         period_results = []
-
+        
         R_c = (self.Di_mm / 2.0) + self.FCA_mm
         tc_s = max(0.001, self.t_s_mm - self.FCA_mm)
-
+        
         R_in = R_c / 25.4
         tc_in = tc_s / 25.4
-
+        
         self.trace.append("STEP 1 & 2 - Determine operating conditions and nominal stress for each period.")
         self.trace.append("Calculation Formula for Circumferential Membrane Stress (Cylindrical Shell):")
         self.trace.append("   sigma_cm = P * (R_c / tc + 0.6)")
         self.trace.append(f"   where R_c = {R_in:.3f} in, tc = {tc_in:.3f} in")
         self.trace.append("")
-
+        
         for idx, p in enumerate(self.periods):
             j = idx + 1
             pressure = float(p.get("Pressure", 0))
             p_unit = str(p.get("Pressure Unit") or "MPa")
             temp_c = float(p.get("Temperature (C)", 0))
             duration = float(p.get("Duration (hrs)", 0))
-
+            
             if p_unit.lower() in ["kg/mm^2", "kg/mm2"]:
                 p_mpa = pressure * 9.80665
             else:
                 p_mpa = pressure
-
+                
             p_psi = p_mpa * 145.038
-
+            
             T_assess = temp_c
             if self.weld_adjustment and temp_c >= self.mat_props['creep_temp_c']:
                 T_assess += 4.0
-
+                
             T_F = (T_assess * 9/5) + 32
             T_R = T_F + 460.0
-
+            
             self.trace.append(f"   --- Period m={j} ---")
             self.trace.append(f"   T_assess = {T_F:.1f} F ({T_assess:.1f} C)")
             self.trace.append(f"   P = {p_psi:.1f} psi")
-
+            
             if T_assess < self.mat_props['creep_temp_c']:
                 self.trace.append(f"   T_assess < T_c ({T_c:.1f} C), creep damage is negligible.")
                 period_results.append({
@@ -483,53 +493,59 @@ class CreepAssessment:
                     'Stress_MPa': 0, 't_d': float('inf'), 'Damage': 0, 'Von_Mises_Stress': 0
                 })
                 continue
-
+                
             stress_psi = p_psi * (R_in / tc_in + 0.6)
             self.trace.append(f"   sigma_cm = {p_psi:.1f} * ({R_in:.3f} / {tc_in:.3f} + 0.6)")
             self.trace.append(f"   Nominal Stress (max) = {stress_psi:.0f} psi = {stress_psi/1000.0:.3f} ksi")
-
+            
             self.trace.append("STEP 3 & 4 - Calculate permissible time using LMP Screening Curves (Annex F)")
             logS = math.log10(stress_psi / 1000.0) if stress_psi > 0 else 0
             self.trace.append(f"   log10(S_ksi) = log10({stress_psi/1000.0:.3f}) = {logS:.3f}")
-            self.trace.append("   LMP = A0 + A1*log10(S) + A2*log10(S)^2 + A3*log10(S)^3")
-            self.trace.append(f"   LMP = {A0} + {A1}*({logS:.3f}) + {A2}*({logS:.3f})^2 + {A3}*({logS:.3f})^3")
-
-            LMP_val = A0 + A1*logS + A2*(logS**2) + A3*(logS**3)
-            self.trace.append(f"   LMP = {LMP_val:.1f}")
-
-            log_L = (LMP_val * 1000.0 / T_R) - C_lmp
-            self.trace.append(f"   log10(L) = (LMP * 1000 / T_R) - C = ({LMP_val:.1f} * 1000 / {T_R:.1f}) - {C_lmp} = {log_L:.3f}")
-
+            self.trace.append("   LMP_base = A0 + A1*log10(S) + A2*log10(S)^2 + A3*log10(S)^3")
+            self.trace.append(f"   LMP_base = {A0} + {A1}*({logS:.3f}) + {A2}*({logS:.3f})^2 + {A3}*({logS:.3f})^3")
+            
+            LMP_val_base = A0 + A1*logS + A2*(logS**2) + A3*(logS**3)
+            LMP_val = LMP_val_base - margin
+            
+            if is_app_v:
+                self.trace.append(f"   LMP_base = {LMP_val_base:.3f}")
+                self.trace.append(f"   LMP_adjusted = LMP_base - Margin = {LMP_val_base:.3f} - {margin:.1f} = {LMP_val:.3f}")
+            else:
+                self.trace.append(f"   LMP = {LMP_val:.3f}")
+            
+            log_L = (LMP_val / T_R) - C_lmp
+            self.trace.append(f"   log10(L) = (LMP / T_R) - C = ({LMP_val:.3f} / {T_R:.1f}) - {C_lmp} = {log_L:.3f}")
+            
             try:
                 L = 10**log_L
                 L_str = f"{L:.0f} hours"
             except OverflowError:
                 L = float('inf')
                 L_str = "Infinite hours (Exceeds 10^8 hours)"
-
+                
             self.trace.append(f"   L = {L_str}")
-
+            
             damage = duration / L if L > 0 else 0
             self.trace.append(f"   Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
             total_damage += damage
-
+            
             stress_mpa = stress_psi / 145.038
-            self.plot_points.append({"LMP": LMP_val * 1000.0, "Stress": stress_mpa, "j": j})
-
+            self.plot_points.append({"LMP": LMP_val, "Stress": stress_mpa, "j": j})
+            
             period_results.append({
                 'j': j, 'P_MPa': p_mpa, 'T_assess': temp_c, 'Duration': duration,
                 'Stress_MPa': stress_mpa, 't_d': L, 'Damage': damage, 'Von_Mises_Stress': stress_mpa
             })
-
+            
         self.trace.append("-" * 60)
         self.trace.append(f"Total Damage (D_total) = sum(Dc) = {total_damage:.6f}")
-
+        
         status = "Acceptable (허용됨)" if total_damage <= 1.0 else "Unacceptable (불가)"
         self.trace.append(f"Since D_total is {'<=' if total_damage <= 1.0 else '>'} 1.0, the component is {status}.")
-
+        
         graph_b64 = self.generate_lmp_graph()
         creep_life_graph_b64 = self.generate_creep_life_graph(period_results)
-
+        
         return {
             "total_damage": total_damage,
             "remaining_life": float('inf') if total_damage == 0 else 0, # simplified
@@ -539,6 +555,7 @@ class CreepAssessment:
             "graph_b64": graph_b64,
             "creep_life_graph_b64": creep_life_graph_b64
         }
+
     def assess_level_3_crack_growth(self):
         self.trace.append("=== Level 3 Creep Crack Growth Assessment (API 579-1 Part 10) ===")
         self.trace.append(f"Material (재질): {self.raw_material}")
@@ -684,16 +701,15 @@ class CreepAssessment:
             "graph_b64": graph_b64,
             "creep_life_graph_b64": ""
         }
+
     def assess(self):
         if "Level 2" in self.assessment_level:
             return self.assess_level_2()
-        elif "Level 1" in self.assessment_level:
+        elif "Level 1" in self.assessment_level or "ASME B31.3" in self.assessment_level:
             return self.assess_level_1()
         elif "Level 3" in self.assessment_level and ("Flaw Depth" in self.data or "Flaw Depth a (mm)" in self.data):
             return self.assess_level_3_crack_growth()
         
-        self.trace.append("=== Component Design Assessment (컴포넌트 설계 평가) ===")
-
         self.trace.append("=== Component Design Assessment (컴포넌트 설계 평가) ===")
         self.trace.append(f"Material (재질): {self.raw_material} (Mapped to {self.material})")
         self.trace.append(f"Creep Range Threshold (크리프 허용 온도): {self.mat_props['creep_temp_c']} °C")
@@ -1106,15 +1122,27 @@ class CreepAssessment:
         }
         
     def generate_lmp_graph(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        import io
+        import base64
         plt.figure(figsize=(8, 5))
         A0 = self.mat_props['A0']
         A1 = self.mat_props['A1']
+        A2 = self.mat_props.get('A2', 0.0)
+        A3 = self.mat_props.get('A3', 0.0)
+        margin = 500.0 if self.assessment_level == "ASME B31.3 App. V" else 0.0
         
         stress_psi_range = np.logspace(1, 5, 100)
-        lmp_range = A0 + A1 * np.log10(stress_psi_range)
+        logS = np.log10(stress_psi_range / 1000.0)
+        lmp_range = (A0 + A1 * logS + A2 * (logS**2) + A3 * (logS**3)) - margin
         stress_mpa_range = stress_psi_range / 145.038
         
-        plt.plot(lmp_range, stress_mpa_range, 'b-', label=f"{self.material} Min Rupture Curve")
+        curve_label = f"{self.material} Min Rupture Curve"
+        if margin > 0:
+            curve_label += " (with App V Margin)"
+            
+        plt.plot(lmp_range, stress_mpa_range, 'b-', label=curve_label)
         
         for pt in self.plot_points:
             plt.plot(pt['LMP'], pt['Stress'], 'ro', markersize=8, label=f"Period j={pt['j']}")
@@ -1211,6 +1239,11 @@ class CreepAssessment:
         return base64.b64encode(buf.read()).decode('utf-8')
 
     def generate_creep_life_graph(self, period_results):
+        import matplotlib.pyplot as plt
+        import numpy as np
+        import io
+        import base64
+        import math
         plt.figure(figsize=(8, 5))
         
         # Find maximum temperature
@@ -1230,15 +1263,17 @@ class CreepAssessment:
         td_range = []
         valid_stress = []
         
-        if "Level 1" in self.assessment_level or self.assessment_level == "ASME B31.3 Appendix V":
+        if "Level 1" in self.assessment_level or self.assessment_level == "ASME B31.3 App. V" or self.assessment_level == "ASME B31.3 Appendix V":
             A0 = self.mat_props['A0']
             A1 = self.mat_props['A1']
+            A2 = self.mat_props.get('A2', 0.0)
+            A3 = self.mat_props.get('A3', 0.0)
             C_lmp = self.mat_props['C_lmp']
-            margin = 500.0 if self.assessment_level == "ASME B31.3 Appendix V" else 0.0
+            margin = 500.0 if (self.assessment_level == "ASME B31.3 App. V" or self.assessment_level == "ASME B31.3 Appendix V") else 0.0
             
             for s_psi in stress_psi_range:
-                logS = math.log10(s_psi)
-                LMP_val = A0 + A1 * logS - margin
+                logS = math.log10(s_psi / 1000.0)
+                LMP_val = (A0 + A1 * logS + A2 * (logS**2) + A3 * (logS**3)) - margin
                 log_td = (LMP_val / T_R) - C_lmp
                 if -5 < log_td < 9: # keep it within reasonable plotting bounds
                     td_range.append(10**log_td)
@@ -1250,30 +1285,32 @@ class CreepAssessment:
             n_omega = self.mat_props['n_omega']
             Omega = self.mat_props['Omega']
             
-            Sr_j = max(1.0, Sr0 - Sr_slope * T_F)
+            Sr = max(1.0, Sr0 - Sr_slope * T_F)
             for s_psi in stress_psi_range:
-                eps_dot = 1e-8 * (s_psi / Sr_j)**n_omega
+                eps_dot = 1e-8 * (s_psi / Sr)**n_omega
                 if eps_dot > 0:
-                    t_d = 1.0 / (eps_dot * Omega)
-                    if 1e-5 < t_d < 1e9:
-                        td_range.append(t_d)
+                    L = 1.0 / (eps_dot * Omega)
+                    if 1e-5 < L < 1e9:
+                        td_range.append(L)
                         valid_stress.append(s_psi / 145.038)
                         
-        if td_range and valid_stress:
-            plt.plot(td_range, valid_stress, 'b-', label=f"Allowable Life Curve at Max T ({max_temp_c:.1f}°C)")
-        
-        # Plot the actual points
+        if len(td_range) > 0:
+            plt.plot(td_range, valid_stress, 'g-', linewidth=2, label=f"Expected Life at {max_temp_c:.1f}°C")
+            
         for p in period_results:
-            if p['t_d'] < float('inf') and p['t_d'] > 0 and p['Damage'] > 0:
-                plt.plot(p['t_d'], p['Stress_MPa'], 'ro', markersize=8)
-                plt.text(p['t_d'], p['Stress_MPa'], f" j={p['j']} (T={p['T_assess']}°C)", verticalalignment='bottom')
+            if p['t_d'] < float('inf'):
+                plt.plot(p['t_d'], p['Stress_MPa'], 'ro', markersize=8, label=f"Period j={p['j']}")
+                plt.text(p['t_d'], p['Stress_MPa'], f" j={p['j']}", verticalalignment='bottom')
                 
         plt.xscale('log')
-        plt.xlabel("Allowable Time to Rupture, t_d (hrs)")
+        plt.yscale('log')
+        plt.xlabel("Allowable Life L (hours)")
         plt.ylabel("Maximum Stress (MPa)")
-        plt.title(f"Acceptable Creep Life Graph - {self.material}")
+        plt.title(f"Creep Rupture Life vs Stress - {self.material}")
         plt.grid(True, which="both", ls="--", alpha=0.5)
-        plt.legend()
+        handles, labels = plt.gca().get_legend_handles_labels()
+        by_label = dict(zip(labels, handles))
+        plt.legend(by_label.values(), by_label.keys())
         
         buf = io.BytesIO()
         plt.savefig(buf, format='png', bbox_inches='tight')
