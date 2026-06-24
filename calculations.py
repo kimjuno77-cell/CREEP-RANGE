@@ -411,9 +411,19 @@ class CreepAssessment:
         graph_b64 = self.generate_damage_graph(period_results)
         creep_life_graph_b64 = self.generate_creep_life_graph(period_results)
 
+        rem_life = 0.0
+        if total_damage < 1.0 and len(period_results) > 0:
+            last_p = period_results[-1]
+            if last_p["t_d"] < float('inf') and last_p["t_d"] > 0:
+                rem_life = last_p["t_d"] * (1.0 - total_damage)
+        elif total_damage >= 1.0:
+            rem_life = 0.0
+        else:
+            rem_life = float('inf')
+
         return {
             "total_damage": total_damage,
-            "remaining_life": float('inf') if total_damage == 0 else 0, # simplified
+            "remaining_life": rem_life,
             "status": status,
             "trace": self.trace,
             "period_results": period_results,
@@ -574,9 +584,19 @@ class CreepAssessment:
         graph_b64 = self.generate_lmp_graph()
         creep_life_graph_b64 = self.generate_creep_life_graph(period_results)
         
+        rem_life = 0.0
+        if total_damage < 1.0 and len(period_results) > 0:
+            last_p = period_results[-1]
+            if last_p["t_d"] < float('inf') and last_p["t_d"] > 0:
+                rem_life = last_p["t_d"] * (1.0 - total_damage)
+        elif total_damage >= 1.0:
+            rem_life = 0.0
+        else:
+            rem_life = float('inf')
+
         return {
             "total_damage": total_damage,
-            "remaining_life": float('inf') if total_damage == 0 else 0, # simplified
+            "remaining_life": rem_life,
             "status": status,
             "trace": self.trace,
             "period_results": period_results,
