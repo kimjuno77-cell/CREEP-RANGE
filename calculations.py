@@ -1326,13 +1326,13 @@ class CreepAssessment:
             plt.plot(td_range, valid_stress, 'g-', linewidth=2, label=f"Expected Life at {max_temp_c:.1f}°C")
             
         for p in period_results:
-            if p['t_d'] < float('inf'):
-                plt.plot(p['t_d'], p['Stress_MPa'], 'ro', markersize=8, label=f"Period j={p['j']}")
-                plt.text(p['t_d'], p['Stress_MPa'], f" j={p['j']}", verticalalignment='bottom')
+            if p['Duration'] > 0:
+                plt.plot(p['Duration'], p['Stress_MPa'], 'ro', markersize=8, label=f"Period j={p['j']} (Operating)")
+                plt.text(p['Duration'], p['Stress_MPa'], f" j={p['j']}", verticalalignment='bottom')
                 
         plt.xscale('log')
         plt.yscale('log')
-        plt.xlabel("Allowable Life L (hours)")
+        plt.xlabel("Time (hours)")
         plt.ylabel("Maximum Stress (MPa)")
         plt.title(f"Creep Rupture Life vs Stress - {self.material}")
         plt.grid(True, which="both", ls="--", alpha=0.5)
