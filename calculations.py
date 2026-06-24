@@ -329,10 +329,11 @@ class CreepAssessment:
         R_in = R_c / 25.4
         tc_in = tc_s / 25.4
 
-        self.trace.append("STEP 1 & 2 - Determine operating conditions and nominal stress for each period.")
-        self.trace.append("Calculation Formula for Circumferential Membrane Stress (Cylindrical Shell):")
-        self.trace.append("   sigma_cm = P * (R_c / tc + 0.6)")
-        self.trace.append(f"   where R_c = {R_in:.3f} in, tc = {tc_in:.3f} in")
+        self.trace.append("STEP 1 - Determine the Assessment Temperature and Pressure for each operating period.")
+        self.trace.append("STEP 2 - Determine the Nominal Stress for each operating period.")
+        self.trace.append("   Calculation Formula for Circumferential Membrane Stress (Cylindrical Shell):")
+        self.trace.append("      sigma_cm = P * (R_c / tc + 0.6)")
+        self.trace.append(f"      where R_c = {R_in:.3f} in, tc = {tc_in:.3f} in")
         self.trace.append("")
 
         for idx, p in enumerate(self.periods):
@@ -355,9 +356,9 @@ class CreepAssessment:
 
             T_F = (T_assess * 9/5) + 32
 
-            self.trace.append(f"   --- Period m={j} ---")
-            self.trace.append(f"   T_assess = {T_F:.1f} F ({T_assess:.1f} C)")
-            self.trace.append(f"   P = {p_psi:.1f} psi")
+            self.trace.append(f"   --- Period m={j} (Duration: {duration} hrs) ---")
+            self.trace.append(f"   [STEP 1] Operating Condition: T_assess = {T_F:.1f} °F ({T_assess:.1f} °C), P = {p_psi:.1f} psi")
+            self.trace.append(f"   [STEP 2] Determine Nominal Stress (sigma)")
 
             if T_assess < self.mat_props['creep_temp_c']:
                 self.trace.append(f"   T_assess < T_c ({T_c:.1f} C), creep damage is negligible.")
@@ -393,29 +394,32 @@ class CreepAssessment:
                 })
                 continue
 
-            self.trace.append("STEP 3 & 4 - Calculate permissible time using MPC Omega Method (Annex F)")
+            self.trace.append("   [STEP 3] Material Properties for MPC Omega")
+            self.trace.append(f"      Sr0 = {Sr0}, Sr_slope = {Sr_slope}, n_omega = {n_omega}, Omega = {Omega}")
+            self.trace.append("   [STEP 4] Calculate Reference Stress (Sr) and Creep Strain Rate (eps_dot)")
 
             Sr_j = max(1.0, Sr0 - Sr_slope * T_F)
-            self.trace.append(f"   Reference Stress Sr = Sr0 - Sr_slope * T_F")
-            self.trace.append(f"   Sr = {Sr0} - {Sr_slope} * {T_F:.1f} = {Sr_j:.1f} psi")
+            self.trace.append(f"      Reference Stress Sr = max(1.0, Sr0 - Sr_slope * T_F)")
+            self.trace.append(f"      Sr = max(1.0, {Sr0} - {Sr_slope} * {T_F:.1f}) = {Sr_j:.1f} psi")
 
             eps_dot = 1e-8 * (stress_psi / Sr_j)**n_omega
-            self.trace.append(f"   Initial Creep Strain Rate eps_dot = 1e-8 * (sigma / Sr)^n")
-            self.trace.append(f"   eps_dot = 1e-8 * ({stress_psi:.1f} / {Sr_j:.1f})^{n_omega} = {eps_dot:.3e} hr^-1")
+            self.trace.append(f"      Initial Creep Strain Rate eps_dot = 1e-8 * (sigma / Sr)^n_omega")
+            self.trace.append(f"      eps_dot = 1e-8 * ({stress_psi:.1f} / {Sr_j:.1f})^{n_omega} = {eps_dot:.3e} hr^-1")
 
+            self.trace.append("   [STEP 5] Calculate Allowable Life (L) and Damage Fraction (Dc)")
             if eps_dot > 0:
                 L = 1.0 / (eps_dot * Omega)
             else:
                 L = float('inf')
 
-            self.trace.append(f"   Allowable Time L = 1 / (eps_dot * Omega)")
+            self.trace.append(f"      Allowable Time L = 1.0 / (eps_dot * Omega)")
             if L == float('inf'):
                 self.trace.append(f"   L = Infinite hours")
             else:
                 self.trace.append(f"   L = 1 / ({eps_dot:.3e} * {Omega}) = {L:.0f} hours")
 
             damage = duration / L if L > 0 else 0
-            self.trace.append(f"   Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
+            self.trace.append(f"      Damage Fraction (Dc) = Duration / L = {duration} / {L:.0f} = {damage:.6f}")
             total_damage += damage
 
             stress_mpa = stress_psi / 145.038
@@ -495,11 +499,12 @@ class CreepAssessment:
         if is_app_v:
             self.trace.append("STEP 1 - Determine operating conditions and nominal stress for each period (B31.3 Appendix V)")
         else:
-            self.trace.append("STEP 1 & 2 - Determine operating conditions and nominal stress for each period.")
+            self.trace.append("STEP 1 - Determine the Assessment Temperature and Pressure for each operating period.")
+            self.trace.append("STEP 2 - Determine the Nominal Stress for each operating period.")
             
-        self.trace.append("Calculation Formula for Circumferential Membrane Stress (Cylindrical Shell):")
-        self.trace.append("   sigma_cm = P * (R_c / tc + 0.6)")
-        self.trace.append(f"   where R_c = {R_in:.3f} in, tc = {tc_in:.3f} in")
+        self.trace.append("   Calculation Formula for Circumferential Membrane Stress (Cylindrical Shell):")
+        self.trace.append("      sigma_cm = P * (R_c / tc + 0.6)")
+        self.trace.append(f"      where R_c = {R_in:.3f} in, tc = {tc_in:.3f} in")
         self.trace.append("")
         
         for idx, p in enumerate(self.periods):
@@ -523,9 +528,9 @@ class CreepAssessment:
             T_F = (T_assess * 9/5) + 32
             T_R = T_F + 460.0
             
-            self.trace.append(f"   --- Period m={j} ---")
-            self.trace.append(f"   T_assess = {T_F:.1f} F ({T_assess:.1f} C)")
-            self.trace.append(f"   P = {p_psi:.1f} psi")
+            self.trace.append(f"   --- Period m={j} (Duration: {duration} hrs) ---")
+            self.trace.append(f"   [STEP 1] Operating Condition: T_assess = {T_F:.1f} °F ({T_assess:.1f} °C), P = {p_psi:.1f} psi")
+            self.trace.append(f"   [STEP 2] Determine Nominal Stress (sigma)")
             
             if T_assess < self.mat_props['creep_temp_c']:
                 self.trace.append(f"   T_assess < T_c ({T_c:.1f} C), creep damage is negligible.")
@@ -562,30 +567,33 @@ class CreepAssessment:
                 continue
             
             if is_app_v:
-                self.trace.append("STEP 2 - Calculate Allowable Rupture Life (t_ri) using LMP and Apply B31.3 Appendix V Margin")
+                self.trace.append("   [STEP 2/3] Calculate Allowable Rupture Life (t_ri) using LMP and Apply B31.3 Appendix V Margin")
             else:
-                self.trace.append("STEP 3 & 4 - Calculate permissible time using LMP Screening Curves (Annex F)")
+                self.trace.append("   [STEP 3] Calculate Larson-Miller Parameter (LMP)")
                 
             logS = math.log10(stress_psi / 1000.0) if stress_psi > 0 else 0
-            self.trace.append(f"   log10(S_ksi) = log10({stress_psi/1000.0:.3f}) = {logS:.3f}")
-            self.trace.append("   LMP_base = A0 + A1*log10(S) + A2*log10(S)^2 + A3*log10(S)^3")
-            self.trace.append(f"   LMP_base = {A0} + {A1}*({logS:.3f}) + {A2}*({logS:.3f})^2 + {A3}*({logS:.3f})^3")
+            self.trace.append(f"      log10(S_ksi) = log10({stress_psi/1000.0:.3f}) = {logS:.3f}")
+            self.trace.append("      LMP_base = A0 + A1*log10(S) + A2*log10(S)^2 + A3*log10(S)^3")
+            self.trace.append(f"      LMP_base = {A0} + {A1}*({logS:.3f}) + {A2}*({logS:.3f})^2 + {A3}*({logS:.3f})^3")
             
             LMP_val_base = A0 + A1*logS + A2*(logS**2) + A3*(logS**3)
             LMP_val = LMP_val_base - margin
             
             if is_app_v:
-                self.trace.append(f"   LMP_base = {LMP_val_base:.3f}")
-                self.trace.append(f"   LMP_adjusted = LMP_base - Margin = {LMP_val_base:.3f} - {margin:.1f} = {LMP_val:.3f}")
+                self.trace.append(f"      LMP_base = {LMP_val_base:.3f}")
+                self.trace.append(f"      LMP_adjusted = LMP_base - Margin = {LMP_val_base:.3f} - {margin:.1f} = {LMP_val:.3f}")
             else:
-                self.trace.append(f"   LMP = {LMP_val:.3f}")
+                self.trace.append(f"      LMP = {LMP_val:.3f}")
             
+            if not is_app_v:
+                self.trace.append("   [STEP 4] Calculate Allowable Life (L)")
+
             log_L = (LMP_val / T_R) - C_lmp
             
             if is_app_v:
-                self.trace.append(f"   log10(t_ri) = (LMP / T_R) - C = ({LMP_val:.3f} / {T_R:.1f}) - {C_lmp} = {log_L:.3f}")
+                self.trace.append(f"      log10(t_ri) = (LMP / T_R) - C = ({LMP_val:.3f} / {T_R:.1f}) - {C_lmp} = {log_L:.3f}")
             else:
-                self.trace.append(f"   log10(L) = (LMP / T_R) - C = ({LMP_val:.3f} / {T_R:.1f}) - {C_lmp} = {log_L:.3f}")
+                self.trace.append(f"      log10(L) = (LMP / T_R) - C_lmp = ({LMP_val:.3f} / {T_R:.1f}) - {C_lmp} = {log_L:.3f}")
             
             try:
                 L = 10**log_L
@@ -595,16 +603,17 @@ class CreepAssessment:
                 L_str = "Infinite hours (Exceeds 10^8 hours)"
                 
             if is_app_v:
-                self.trace.append(f"   t_ri = {L_str}")
+                self.trace.append(f"      t_ri = {L_str}")
             else:
-                self.trace.append(f"   L = {L_str}")
+                self.trace.append(f"      L = 10^log10(L) = {L_str}")
             
             damage = duration / L if L > 0 else 0
             
+            self.trace.append("   [STEP 5] Calculate Damage Fraction (Dc)")
             if is_app_v:
-                self.trace.append(f"   Life Fraction = t_i / t_ri = {duration} / {L:.0f} = {damage:.6f}")
+                self.trace.append(f"      Life Fraction = t_i / t_ri = {duration} / {L:.0f} = {damage:.6f}")
             else:
-                self.trace.append(f"   Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
+                self.trace.append(f"      Damage Dc = t_m / L = {duration} / {L:.0f} = {damage:.6f}")
                 
             total_damage += damage
             
@@ -847,7 +856,11 @@ class CreepAssessment:
             
             # 1. Creep damage calculation
             self.trace.append("")
-            self.trace.append("   1. Creep Damage Accumulation (Miner's Rule):")
+            self.trace.append("   [STEP 1] Creep Damage Accumulation (Miner's Rule):")
+            self.trace.append("      Calculation Formula:")
+            self.trace.append("         eps_dot = 1e-8 * (sigma / Sr)^n_omega")
+            self.trace.append("         t_d = 1.0 / (eps_dot * Omega)")
+            self.trace.append("         dDc = dt / t_d")
             
             Dc_cycle = 0.0
             total_duration_cycle = 0.0
@@ -896,7 +909,8 @@ class CreepAssessment:
                     dDc = 0.0
                     
                 Dc_cycle += dDc
-                self.trace.append(f"      Step {k+1} ({pt1['Time']}h -> {pt2['Time']}h): dt={dt:.2f}h, T={T_assess:.1f}°C, Stress={sigma_avg:.1f} MPa, t_d={t_d:.1f}h -> dDc={dDc:.6f}")
+                self.trace.append(f"      Step {k+1} ({pt1['Time']}h -> {pt2['Time']}h): dt={dt:.2f}h, T_avg={T_assess:.1f}°C, Stress_avg={sigma_avg:.1f} MPa")
+                self.trace.append(f"         eps_dot={eps_dot:.3e} hr^-1, t_d={t_d:.1f}h -> dDc={dDc:.6f}")
                 
             Dc_total = Dc_cycle * multiplier
             self.trace.append(f"      Cycle Creep Damage (Dc_cycle): {Dc_cycle:.6f}")
@@ -904,7 +918,11 @@ class CreepAssessment:
             
             # 2. Fatigue damage calculation using Rainflow counting
             self.trace.append("")
-            self.trace.append("   2. Fatigue Damage Accumulation (Rainflow counting & ASME Div 2 Curves):")
+            self.trace.append("   [STEP 2] Fatigue Damage Accumulation (Rainflow counting & ASME Div 2 Curves):")
+            self.trace.append("      Calculation Formula:")
+            self.trace.append("         Sa = Stress_Range / 2.0")
+            self.trace.append("         N_allow = (A / (Sa - B))^2")
+            self.trace.append("         dDf = count / N_allow")
             
             stresses = [pt["Stress"] for pt in profile_points]
             cycles = rainflow(stresses)
@@ -938,7 +956,7 @@ class CreepAssessment:
             
             # 3. Creep-Fatigue Interaction Envelope Check
             self.trace.append("")
-            self.trace.append("   3. Creep-Fatigue Bilinear Envelope Check:")
+            self.trace.append("   [STEP 3] Creep-Fatigue Bilinear Envelope Check:")
             
             is_ss = "304" in self.material or "316" in self.material or "321" in self.material or "347" in self.material
             C = 0.3 if is_ss else 0.1
