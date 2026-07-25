@@ -155,6 +155,24 @@ tab1, tab2 = st.tabs(["📝 Input Data (Components)", "📊 Results & Report"])
 with tab1:
     st.markdown("### Component Design & Operating Data")
     
+    with st.expander("📖 Mandatory Appendices & User Guide (필수 부록 및 사용 가이드)", expanded=False):
+        st.markdown("""
+        #### Appendix 1. Calculation User Guide (계산서 사용 가이드)
+        본 계산서는 API 579-1 Part 10 규정에 따라 크리프 한계 온도 이상에서 운전되는 기기(배관, 압력용기)의 잔여 수명을 평가합니다. 입력된 온도 및 응력 프로파일을 바탕으로 손상 지수(Damage Fraction)를 산출하며, 총 손상비가 1.0 이하일 경우 안전한 것으로 간주합니다. 입력 데이터 중 응력(Stress)은 내부 압력에 의한 1차 막응력을 기준으로 하였으나, 사용자가 Von Mises 응력을 직접 입력한 경우 해당 값이 우선 적용됩니다.
+
+        #### Appendix 2. Theoretical Background & Engineering Principles (이론적 배경)
+        - **Level 1 (Larson-Miller Parameter, LMP)**: 재료의 파단 시간을 온도와 응력의 함수로 나타낸 LMP 곡선을 활용하여 수명을 평가합니다. ASME B31.3 Appendix V가 적용된 경우 추가적인 여유도(Margin)가 고려됩니다.
+        - **Level 2 (MPC Omega Method)**: 재료의 크리프 변형률 속도(Strain Rate)와 손상 가속 인자(Ω)를 기반으로 허용 수명을 산정하는 고급 평가 기법입니다.
+        - **Level 3 (Crack Growth Analysis)**: 초기 균열이 존재할 때 크리프에 의한 균열 성장률(da/dt)을 수치해석적으로 적분하여, 임계 파괴 인성(K_mat)에 도달하기 전까지의 수명을 예측합니다.
+
+        #### Appendix 3. Source Literature & Reference Bibliography (참고 문헌)
+        - API 579-1 / ASME FFS-1, "Fitness-For-Service", Part 10 and Annex F
+        - API 579-2 / ASME FFS-2, "Fitness-For-Service Example Manual", Part 10
+        - ASME Boiler and Pressure Vessel Code (BPVC), Section VIII
+        - ASME B31.3 Process Piping, Appendix V
+        - KDS 31 10 20 플랜트배관 설계기준 / KDS 41 30 00 강구조 설계 기준
+        """)
+
     col1, col2 = st.columns([3, 1])
     with col1:
         comp_names = [c.get("Component Name", f"Component {i+1}") for i, c in enumerate(st.session_state['components'])]
