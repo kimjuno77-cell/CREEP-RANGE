@@ -306,7 +306,9 @@ class CreepAssessment:
 
 
     def assess_level_2(self):
-        self.trace.append("=== Level 2 Creep Assessment (API 579-1/ASME FFS-1 MPC Omega) ===")
+        self.trace.append("=== Level 2 Creep Assessment ===")
+        self.trace.append("Mandatory Standard: API 579-1/ASME FFS-1, Part 10, Section 10.4.3 (MPC Omega Method)")
+        self.trace.append("Reference Standard: API 579-2, Example 10.3 (Heater Tube Example)")
         self.trace.append(f"Material (재질): {self.raw_material}")
 
         T_c = self.mat_props['creep_temp_c']
@@ -433,6 +435,11 @@ class CreepAssessment:
 
         status = "Acceptable (허용됨)" if total_damage <= 1.0 else "Unacceptable (불가)"
         self.trace.append(f"Since D_total is {'<=' if total_damage <= 1.0 else '>'} 1.0, the component is {status}.")
+        
+        self.trace.append("")
+        self.trace.append("[참고사항] (Reference Notes)")
+        self.trace.append("  - MPC Omega 방법은 재료의 변형률 속도(Strain Rate)를 기반으로 하여 Level 1보다 정밀하지만, 입력된 운전 프로파일의 정확도에 크게 의존합니다.")
+        self.trace.append("  - 1차 응력(Primary Stress) 기준 평가이므로 국부적인 열응력(Thermal Stress)이 지배적인 영역에서는 Level 3 평가가 필요할 수 있습니다.")
 
         graph_b64 = self.generate_damage_graph(period_results)
         creep_life_graph_b64 = self.generate_creep_life_graph(period_results)
@@ -464,8 +471,11 @@ class CreepAssessment:
         is_app_v = (self.assessment_level == "ASME B31.3 App. V" or self.assessment_level == "ASME B31.3 Appendix V")
         if is_app_v:
             self.trace.append("=== ASME B31.3 Appendix V Creep Assessment ===")
+            self.trace.append("Mandatory Standard: ASME B31.3 Process Piping, Appendix V")
         else:
-            self.trace.append("=== Level 1 Creep Assessment (API 579-1/ASME FFS-1) ===")
+            self.trace.append("=== Level 1 Creep Assessment ===")
+            self.trace.append("Mandatory Standard: API 579-1/ASME FFS-1, Part 10, Section 10.4.2 (LMP Method)")
+            self.trace.append("Reference Standard: API 579-2, Example 10.1 & 10.2")
             
         self.trace.append(f"Material (재질): {self.raw_material}")
         
@@ -633,8 +643,12 @@ class CreepAssessment:
             self.trace.append(f"Total Life Fraction = sum(t_i / t_ri) = {total_damage:.6f}")
             self.trace.append(f"Since Total Life Fraction is {'<=' if total_damage <= 1.0 else '>'} 1.0, the operation is {status} per B31.3 App V.")
         else:
-            self.trace.append(f"Total Damage (D_total) = sum(Dc) = {total_damage:.6f}")
             self.trace.append(f"Since D_total is {'<=' if total_damage <= 1.0 else '>'} 1.0, the component is {status}.")
+        
+        self.trace.append("")
+        self.trace.append("[참고사항] (Reference Notes)")
+        self.trace.append("  - 본 평가는 설계 단계의 보수적인 가정을 포함하고 있으며, 실제 운전 환경의 국부적인 응력 집중이나 잔류 응력을 모두 반영하지 않을 수 있습니다.")
+        self.trace.append("  - 상세한 피로-크리프 상호작용(Creep-Fatigue Interaction) 검토가 필요한 경우 Level 3 평가(유한요소해석 기반)를 권장합니다.")
         
         graph_b64 = self.generate_lmp_graph()
         creep_life_graph_b64 = self.generate_creep_life_graph(period_results)
@@ -662,7 +676,9 @@ class CreepAssessment:
         }
 
     def assess_level_3_crack_growth(self):
-        self.trace.append("=== Level 3 Creep Crack Growth Assessment (API 579-1 Part 10) ===")
+        self.trace.append("=== Level 3 Creep Crack Growth Assessment ===")
+        self.trace.append("Mandatory Standard: API 579-1/ASME FFS-1, Part 10, Section 10.4.4 & Annex 10B.4")
+        self.trace.append("Reference Standard: API 579-2, Example 10.4")
         self.trace.append(f"Material (재질): {self.raw_material}")
 
         crack_geometry = self.data.get("Crack Geometry", "RCSCLE2 (Cylinder, Outside Surface, Longitudinal)")
@@ -794,6 +810,11 @@ class CreepAssessment:
         self.trace.append("   Therefore, the vessel is acceptable for continued operation.")
 
         status = "Acceptable (허용됨)"
+        
+        self.trace.append("")
+        self.trace.append("[참고사항] (Reference Notes)")
+        self.trace.append("  - Level 3 평가는 가상의 균열 성장률(da/dt)을 적분하여 평가하며, 임계 응력 확대 계수(K_mat)에 도달하거나 총 손상비가 0.8을 초과할 때까지의 수명을 예측합니다.")
+        self.trace.append("  - 주기적인 비파괴검사(NDT)를 통해 실제 균열의 성장 여부를 지속적으로 모니터링해야 합니다.")
 
         graph_b64 = self.generate_crack_growth_graph(growth_data)
 
